@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>The Glitch - 8-Bit Coding</title>
+    <!-- Pixelated Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+    <!-- VCR OSD Mono for small text -->
+    <link href="https://fonts.cdnfonts.com/css/vcr-osd-mono" rel="stylesheet">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+          theme: {
+            extend: {
+              colors: {
+                retro: {
+                  red: '#ff0000',
+                  blue: '#0000ff',
+                  yellow: '#ffff00',
+                  brick: '#8b4513',
+                  black: '#000000',
+                  white: '#ffffff',
+                  sky: '#5c94fc',
+                  terminal: '#1a1a1a',
+                  'terminal-green': '#00ff41'
+                }
+              },
+              fontFamily: {
+                sans: ['"VCR OSD Mono"', '"VT323"', 'system-ui'],
+                pixel: ['"Press Start 2P"', 'cursive'],
+                vcr: ['"VCR OSD Mono"', 'monospace'],
+                mono: ['"VT323"', 'monospace']
+              },
+              borderWidth: {
+                '4': '4px',
+                '8': '8px',
+              },
+              keyframes: {
+                shake: {
+                  '0%, 100%': { transform: 'translateX(0)' },
+                  '25%': { transform: 'translateX(-5px)' },
+                  '75%': { transform: 'translateX(5px)' },
+                }
+              },
+              animation: {
+                shake: 'shake 0.2s ease-in-out 0s 2',
+              }
+            }
+          }
+        }
+    </script>
+    <style>
+        /* Plain Light Blue Background - Mario Sky */
+        html, body {
+            height: 100%;
+            overflow: hidden; 
+            margin: 0;
+            padding: 0;
+            background-color: #5c94fc; 
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+        }
+
+        .mario-ground {
+            height: 64px;
+            width: 100%;
+            background-image: url('/bricks.jpg');
+            background-repeat: repeat; 
+            background-size: 64px 64px; 
+            image-rendering: pixelated;
+            border-top: 4px solid #000000;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            z-index: 100;
+        }
+
+        .mario-ground.hidden {
+            display: none;
+        }
+
+        img {
+            image-rendering: pixelated;
+        }
+        
+        * {
+            cursor: url('https://cur.cursors-4u.net/games/gam-4/gam372.cur'), auto !important;
+        }
+
+        ::-webkit-scrollbar {
+            width: 12px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #000000;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #ffffff;
+            border: 2px solid #000000;
+        }
+        
+        .strikethrough-pixel {
+            text-decoration: line-through;
+            text-decoration-color: #ff0000;
+            text-decoration-thickness: 2px;
+        }
+    </style>
+<script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react@^19.2.4",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
+    "react/": "https://esm.sh/react@^19.2.4/"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
+</head>
+<body class="font-sans">
+    <div id="root" class="flex flex-col h-full w-full relative z-10"></div>
+    <div class="mario-ground"></div>
+<script type="module" src="/index.tsx"></script>
+</body>
+</html>
