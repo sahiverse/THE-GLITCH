@@ -41,10 +41,9 @@ The application is designed as a **HIGH-PERFORMANCE MONOLITH** capable of handli
 ### **✨ KEY FEATURES**
 
 * **⚡ REAL-TIME INTERACTION:** Synchronized game states and live chat across all connected clients.
-* **🛡️ SANDBOXED EXECUTION:** Securely evaluates user-submitted Python code against predefined test cases.
+* **🛡️ SANDBOXED EXECUTION:** Securely evaluates user-submitted code against predefined test cases.
 * **🍄 RETRO DESIGN:** Custom 8-bit UI components, pixelated fonts, and a Mario-inspired color palette.
 * **🚫 PROFANITY FILTER:** Integrated monitoring to ensure clean nicknames and chat environments.
-* **📂 DUAL GAMEPLAY MODES:** Choose your path—**SOURCE** (Write actual code) or **README** (Write high-level pointers).
 
 ---
 
