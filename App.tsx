@@ -11,6 +11,8 @@ import ImposterGameRoom from './components/ImposterGameRoom';
 import ImposterWin from './components/ImposterWin';
 import CivilianWin from './components/CivilianWin';
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+
 const App: React.FC = () => {
   const [gameState, setGameState] = useState<'home' | 'entering-name' | 'room' | 'role-reveal' | 'selecting-topic' | 'game' | 'game-over'>('home');
   const gameStateRef = useRef(gameState);
@@ -61,7 +63,7 @@ const [civilianTestCases, setCivilianTestCases] = useState<any[]>([]);
 
   // Initialize socket connection
   useEffect(() => {
-    const newSocket = io('http://localhost:3000');
+    const newSocket = io(API_URL);
     
     newSocket.on('connect', () => {
       console.log('Connected to server:', newSocket.id);
@@ -491,7 +493,7 @@ const [civilianTestCases, setCivilianTestCases] = useState<any[]>([]);
     console.log('🔍 Joining room with code:', inviteCode);
     
     try {
-      const response = await fetch(`http://localhost:3000/room/${inviteCode}/exists`);
+      const response = await fetch(`${API_URL}/room/${inviteCode}/exists`);
       const data = await response.json();
       
       console.log('📋 Room check response:', data);
@@ -551,7 +553,7 @@ const [civilianTestCases, setCivilianTestCases] = useState<any[]>([]);
     try {
       if (pendingAction === 'create') {
         // Create room via API
-        const response = await fetch('http://localhost:3000/room/create', {
+        const response = await fetch(`${API_URL}/room/create`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -596,7 +598,7 @@ const [civilianTestCases, setCivilianTestCases] = useState<any[]>([]);
       } else if (pendingAction === 'join') {
         // Check room availability again before joining
         try {
-          const checkResponse = await fetch(`http://localhost:3000/room/${inviteCode}/exists`);
+          const checkResponse = await fetch(`${API_URL}/room/${inviteCode}/exists`);
           const checkData = await checkResponse.json();
           
           if (!checkData.exists) {
