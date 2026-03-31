@@ -91,8 +91,17 @@
             image-rendering: pixelated;
         }
         
-        * {
-            cursor: url('https://cur.cursors-4u.net/games/gam-4/gam372.cur'), auto !important;
+        /* Force robot cursor on everything with multiple formats */
+        html, body, div, span, p, h1, h2, h3, h4, h5, h6, 
+        button, a, input, select, textarea, [role="button"], 
+        .retro-button, *:hover, *:active, *:focus {
+            cursor: url('/robo-hand.cur'), url('/robo-hand.png'), auto !important;
+        }
+        
+        /* Ensure interactive elements use pointer cursor */
+        button, a, input, select, textarea, [role="button"], 
+        .retro-button, [onclick], [role="button"]:hover {
+            cursor: url('/robo-hand.cur'), url('/robo-hand.png'), pointer !important;
         }
 
         ::-webkit-scrollbar {
@@ -111,6 +120,53 @@
             text-decoration-color: #ff0000;
             text-decoration-thickness: 2px;
         }
+
+        /* Custom Slider Styles */
+        .slider {
+            -webkit-appearance: none;
+            appearance: none;
+            height: 12px;
+            border-radius: 0;
+            outline: none;
+            border: 3px solid #000000;
+            box-shadow: 3px 3px 0px 0px rgba(0,0,0,0.2);
+        }
+
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 0;
+            background: #f19121;
+            cursor: pointer;
+            border: 3px solid #000000;
+            box-shadow: 2px 2px 0px 0px rgba(0,0,0,0.3);
+            image-rendering: pixelated;
+        }
+
+        .slider::-moz-range-thumb {
+            width: 24px;
+            height: 24px;
+            border-radius: 0;
+            background: #f19121;
+            cursor: pointer;
+            border: 3px solid #000000;
+            box-shadow: 2px 2px 0px 0px rgba(0,0,0,0.3);
+            image-rendering: pixelated;
+        }
+
+        .slider::-webkit-slider-thumb:hover {
+            background: #ffaa33;
+            transform: translateY(-1px);
+            box-shadow: 3px 3px 0px 0px rgba(0,0,0,0.3);
+        }
+
+        .slider::-moz-range-thumb:hover {
+            background: #ffaa33;
+            transform: translateY(-1px);
+            box-shadow: 3px 3px 0px 0px rgba(0,0,0,0.3);
+        }
     </style>
 <script type="importmap">
 {
@@ -123,9 +179,44 @@
 </script>
 <link rel="stylesheet" href="/index.css">
 </head>
-<body class="font-sans">
+<body class="font-sans" style="cursor: url('/robo-hand.cur'), url('/robo-hand.png'), auto !important;">
     <div id="root" class="flex flex-col h-full w-full relative z-10"></div>
-    <div class="mario-ground"></div>
+    <div id="main-mario-ground" class="mario-ground"></div>
+    
+    <script>
+        // Force robot cursor on all elements
+        function forceRobotCursor() {
+            const cursorStyle = 'url("/robo-hand.cur"), url("/robo-hand.png"), auto';
+            const pointerStyle = 'url("/robo-hand.cur"), url("/robo-hand.png"), pointer';
+            
+            // Apply to all elements
+            document.querySelectorAll('*').forEach(el => {
+                el.style.setProperty('cursor', cursorStyle, 'important');
+            });
+            
+            // Apply pointer to interactive elements
+            document.querySelectorAll('button, a, input, select, textarea, [role="button"], .retro-button').forEach(el => {
+                el.style.setProperty('cursor', pointerStyle, 'important');
+            });
+        }
+        
+        // Apply cursor immediately
+        forceRobotCursor();
+        
+        // Apply cursor when DOM changes
+        const observer = new MutationObserver(() => {
+            forceRobotCursor();
+        });
+        
+        observer.observe(document.body, {
+            childList: true,
+            subtree: true
+        });
+        
+        // Apply cursor periodically to ensure consistency
+        setInterval(forceRobotCursor, 1000);
+    </script>
+    
 <script type="module" src="/index.tsx"></script>
 </body>
 </html>

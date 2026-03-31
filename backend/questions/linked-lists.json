@@ -1,0 +1,83 @@
+{
+  "mission_id": "LNK_004",
+  "topic": "Linked Lists",
+  "title": "The Pointer Paradox",
+  "briefing": {
+    "base_description": "Given an array of integers `nums` containing `n + 1` integers where each integer is in the range `[1, n]` inclusive. There is only one repeated number in `nums`, return this repeated number. You must solve the problem without modifying the array `nums` and using only constant extra space.\n\nExample 1:\nInput: nums = [1,3,4,2,2]\nOutput: 2\n\nExample 2:\nInput: nums = [3,1,3,4,2]\nOutput: 3\n\nExample 3:\nInput: nums = [3,3,3,3,3]\nOutput: 3\n\nConstraints:\n* `1 <= n <= 10^5`\n* `nums.length == n + 1`\n* `1 <= nums[i] <= n`\n* All the integers in `nums` appear only once except for precisely one integer which appears two or more times.",
+    "imposter_directive": "🔴 IMPOSTOR EYES ONLY — SABOTAGE PROTOCOL 🔴\nYour mission is to silently corrupt the cycle detection. You must write code that LOOKS correct but fails on the two sabotage cases below.\n\nStrategy: Because this is secretly a Linked List cycle detection problem hidden in an array, crewmates often try to cheat using math. They will use the <u>Sum Formula trap</u> (summing the array and subtracting `n*(n+1)/2`) or the <u>XOR trap</u>. Your job is to exploit the fact that the duplicate can appear MORE than twice. Make sure your own submission passes the 4 visible test cases — only the hidden ones should fail.",
+    "constraints": [
+      "1 ≤ n ≤ 10^5",
+      "nums.length == n + 1",
+      "1 ≤ nums[i] ≤ n",
+      "Must not modify the array (read-only)",
+      "Must use O(1) constant extra space",
+      "Time complexity SHOULD be O(N) — ideally using Floyd's Tortoise and Hare algorithm"
+    ],
+    "test_case_explanations": [
+      "Visible Case 1 — Basic Duplicate:\n  Input: nums = [1,3,4,2,2]\n  Output: 2\n  Why: n = 4. The number 2 appears twice.",
+      "Visible Case 2 — Cycle in the Middle:\n  Input: nums = [3,1,3,4,2]\n  Output: 3\n  Why: n = 4. The number 3 appears twice. Following the indices as next pointers reveals a cycle entering at 3.",
+      "Visible Case 3 — All Identical:\n  Input: nums = [3,3,3,3,3]\n  Output: 3\n  Why: n = 4. The number 3 appears five times. 3 is the only duplicate.",
+      "Visible Case 4 — Smallest Valid Array:\n  Input: nums = [2,1,2]\n  Output: 2\n  Why: n = 2. The minimum possible n is 1, but here n = 2. The number 2 is repeated."
+    ],
+    "sabotage_explanations": [
+      "SABOTAGE CASE 1 — The Math Formula Illusion (Hidden Test):\n  Input: nums = [2,2,2,2,2]\n  Expected Output: 2\n  Impostor Goal: Crewmates using the `(Sum of Array) - (Sum of 1 to n)` math trick will fail miserably here. For `n=4`, the expected sum is 10. Their array sum is 10. `10 - 10 = 0`. They will output `0` instead of `2`. The math trick ONLY works if the duplicate appears exactly twice. Floyd's algorithm correctly handles multiple occurrences.",
+      "SABOTAGE CASE 2 — The XOR Trap (Hidden Test):\n  Input: nums = [1,4,4,4,4]\n  Expected Output: 4\n  Impostor Goal: Similar to the sum trick, crewmates trying to XOR all array values against the numbers `1` to `n` will get canceled out incorrectly if the frequency of the duplicate is even. This will output a completely wrong number."
+    ]
+  },
+  "realTestCases": [
+    {
+      "input": "5\n1 3 4 2 2",
+      "expectedOutput": "2",
+      "isHidden": false
+    },
+    {
+      "input": "5\n3 1 3 4 2",
+      "expectedOutput": "3",
+      "isHidden": false
+    },
+    {
+      "input": "5\n3 3 3 3 3",
+      "expectedOutput": "3",
+      "isHidden": false
+    },
+    {
+      "input": "3\n2 1 2",
+      "expectedOutput": "2",
+      "isHidden": false
+    },
+    {
+      "input": "5\n2 2 2 2 2",
+      "expectedOutput": "2",
+      "isHidden": true
+    },
+    {
+      "input": "5\n1 4 4 4 4",
+      "expectedOutput": "4",
+      "isHidden": true
+    },
+    {
+      "input": "10\n2 5 9 6 9 3 8 9 7 1",
+      "expectedOutput": "9",
+      "isHidden": true
+    },
+    {
+      "input": "6\n1 2 3 4 5 1",
+      "expectedOutput": "1",
+      "isHidden": true
+    }
+  ],
+  "sabotageTestCases": [
+    {
+      "name": "The Math Formula Illusion",
+      "input": "5\n2 2 2 2 2",
+      "expectedOutput": "2",
+      "explanation": "Crewmates using the sum trick `Sum(nums) - Sum(1...n)` will calculate `10 - 10 = 0`. They fail to account for a duplicate appearing more than twice, completely missing the constraint logic."
+    },
+    {
+      "name": "The XOR Trap",
+      "input": "5\n1 4 4 4 4",
+      "expectedOutput": "4",
+      "explanation": "Using XOR `(1^2^3^4) ^ (1^4^4^4^4)` yields 2 instead of 4 because the even occurrences of the duplicate cancel themselves out in bitwise operations."
+    }
+  ]
+}

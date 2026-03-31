@@ -1,0 +1,81 @@
+{
+  "mission_id": "HSH_003",
+  "topic": "Hashing",
+  "title": "The Substring Cipher",
+  "briefing": {
+    "base_description": "You are given a string `s` of length `n` and an integer `k`, where `n` is a multiple of `k`. Your task is to hash the string `s` into a new string called `result`, which has a length of `n / k`.\n\nFirst, divide `s` into `n / k` substrings, each with a length of `k`. Then, initialize `result` as an empty string.\n\nFor each substring in order from the beginning:\n1. The hash value of a character is the index of that character in the English alphabet (e.g., 'a' → 0, 'b' → 1, ..., 'z' → 25).\n2. Calculate the sum of all the hash values of the characters in the substring.\n3. Find the remainder of this sum when divided by 26, which is called `hashedChar`.\n4. Identify the character in the English lowercase alphabet that corresponds to `hashedChar`.\n5. Append that character to the end of `result`.\n\nReturn `result`.\n\nExample 1:\nInput: s = \"abcd\", k = 2\nOutput: \"bf\"\n\nExample 2:\nInput: s = \"mxz\", k = 3\nOutput: \"i\"",
+    "imposter_directive": "🔴 IMPOSTOR EYES ONLY — SABOTAGE PROTOCOL 🔴\nYour mission is to silently corrupt the character hashing process. You must write code that LOOKS correct but fails on the two sabotage cases below.\n\nStrategy: Crewmates will likely make one of two fatal errors: (a) <u>failing to reset their running sum to zero</u> at the start of each new substring chunk, or (b) <u>using raw ASCII values instead of zero-indexed alphabet values</u> (e.g., adding 97 for 'a' and applying modulo too early or too late). Your job is to exploit these logical leaks. Make sure your own submission passes the 4 visible test cases — only the hidden ones should fail.",
+    "constraints": [
+      "1 ≤ k ≤ 100",
+      "k ≤ s.length ≤ 1000",
+      "s.length is divisible by k",
+      "s consists only of lowercase English letters"
+    ],
+    "test_case_explanations": [
+      "Visible Case 1 — Basic Hashing:\n  Input: s = \"abcd\", k = 2\n  Output: \"bf\"\n  Why: \"ab\" -> 0+1=1 -> 'b'. \"cd\" -> 2+3=5 -> 'f'.",
+      "Visible Case 2 — Single Chunk:\n  Input: s = \"mxz\", k = 3\n  Output: \"i\"\n  Why: \"mxz\" -> 12+23+25=60. 60 % 26 = 8 -> 'i'.",
+      "Visible Case 3 — Repeating Chunks:\n  Input: s = \"xyzxyz\", k = 3\n  Output: \"uu\"\n  Why: \"xyz\" -> 23+24+25=72. 72 % 26 = 20 -> 'u'. The second chunk is identical, resulting in \"uu\".",
+      "Visible Case 4 — Smallest Valid Input:\n  Input: s = \"a\", k = 1\n  Output: \"a\"\n  Why: \"a\" -> 0. 0 % 26 = 0 -> 'a'."
+    ],
+    "sabotage_explanations": [
+      "SABOTAGE CASE 1 — The Accumulator Leak (Hidden Test):\n  Input: s = \"abzz\", k = 2\n  Expected Output: \"by\"\n  Impostor Goal: If a crewmate forgets to reset their `sum` variable to `0` at the start of the second chunk, the sum from \"ab\" (1) will bleed into \"zz\" (50), resulting in 51 % 26 = 25 ('z'). The output will wrongly be \"bz\".",
+      "SABOTAGE CASE 2 — The Raw ASCII Trap (Hidden Test):\n  Input: s = \"aaaa\", k = 2\n  Expected Output: \"aa\"\n  Impostor Goal: A crewmate might just sum the ASCII values directly and mod by 26 at the end. 'a' is 97. 97 + 97 = 194. 194 % 26 = 12 ('m'). Their code will output \"mm\" instead of \"aa\". The math only works if you subtract 97 *before* summing."
+    ]
+  },
+  "realTestCases": [
+    {
+      "input": "abcd\n2",
+      "expectedOutput": "bf",
+      "isHidden": false
+    },
+    {
+      "input": "mxz\n3",
+      "expectedOutput": "i",
+      "isHidden": false
+    },
+    {
+      "input": "xyzxyz\n3",
+      "expectedOutput": "uu",
+      "isHidden": false
+    },
+    {
+      "input": "a\n1",
+      "expectedOutput": "a",
+      "isHidden": false
+    },
+    {
+      "input": "abzz\n2",
+      "expectedOutput": "by",
+      "isHidden": true
+    },
+    {
+      "input": "aaaa\n2",
+      "expectedOutput": "aa",
+      "isHidden": true
+    },
+    {
+      "input": "bz\n2",
+      "expectedOutput": "a",
+      "isHidden": true
+    },
+    {
+      "input": "zzzzzzzzzz\n5",
+      "expectedOutput": "vv",
+      "isHidden": true
+    }
+  ],
+  "sabotageTestCases": [
+    {
+      "name": "The Accumulator Leak",
+      "input": "abzz\n2",
+      "expectedOutput": "by",
+      "explanation": "Tests if the crewmate resets the `sum` variable between chunks. Failing to do so will result in an output of 'bz' instead of 'by'."
+    },
+    {
+      "name": "The Raw ASCII Trap",
+      "input": "aaaa\n2",
+      "expectedOutput": "aa",
+      "explanation": "Tests if the crewmate correctly normalizes characters to a 0-25 scale BEFORE summing. If they sum raw ASCII values (97+97=194) and then modulo, they will get 'mm'."
+    }
+  ]
+}

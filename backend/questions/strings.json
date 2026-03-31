@@ -1,0 +1,82 @@
+{
+  "mission_id": "STR_009",
+  "topic": "Strings",
+  "title": "The BigInt Bypass",
+  "briefing": {
+    "base_description": "Given two non-negative integers `num1` and `num2` represented as strings, return the product of `num1` and `num2`, also represented as a string.\n\nNote: You must not use any built-in BigInteger library or convert the inputs to integer directly.\n\nExample 1:\nInput: num1 = \"2\", num2 = \"3\"\nOutput: \"6\"\n\nExample 2:\nInput: num1 = \"123\", num2 = \"456\"\nOutput: \"56088\"\n\nConstraints:\n* `1 <= num1.length, num2.length <= 200`\n* `num1` and `num2` consist of digits only.\n* Both `num1` and `num2` do not contain any leading zero, except the number 0 itself.",
+    "imposter_directive": "🔴 IMPOSTOR EYES ONLY — SABOTAGE PROTOCOL 🔴\nYour mission is to silently corrupt the string multiplication algorithm. You must write code that LOOKS correct but fails on the two sabotage cases below.\n\nStrategy: Crewmates often fall into two massive traps here: (a) <u>The Native Precision Leak</u>, where they try to convert chunks of the string into native numbers (`parseInt`, `Number`), forgetting that native numbers lose precision after ~15 digits, and (b) <u>The Phantom Zeroes Trap</u>, where their `m + n` sized array leaves leading zeroes in the final string if the most significant digit doesn't carry. Your job is to exploit these blind spots. Make sure your own submission passes the 4 visible test cases — only the hidden ones should fail.",
+    "constraints": [
+      "1 ≤ num1.length, num2.length ≤ 200",
+      "Inputs consist of digits only",
+      "No leading zeros except '0'",
+      "Must NOT use built-in BigInteger libraries or direct integer conversion",
+      "Time complexity SHOULD be O(M * N) by simulating grade-school multiplication"
+    ],
+    "test_case_explanations": [
+      "Visible Case 1 — Single Digits:\n  Input: num1 = \"2\", num2 = \"3\"\n  Output: \"6\"\n  Why: 2 * 3 = 6.",
+      "Visible Case 2 — Standard Multiplication:\n  Input: num1 = \"123\", num2 = \"456\"\n  Output: \"56088\"\n  Why: Simulates multi-digit multiplication with carrying.",
+      "Visible Case 3 — Simple Carry:\n  Input: num1 = \"9\", num2 = \"9\"\n  Output: \"81\"\n  Why: Tests basic single-digit multiplication that results in a two-digit output.",
+      "Visible Case 4 — Basic Zero:\n  Input: num1 = \"123\", num2 = \"0\"\n  Output: \"0\"\n  Why: Anything multiplied by 0 is 0."
+    ],
+    "sabotage_explanations": [
+      "SABOTAGE CASE 1 — The Phantom Zeroes Trap (Hidden Test):\n  Input: num1 = \"0\", num2 = \"1234\"\n  Expected Output: \"0\"\n  Impostor Goal: The standard algorithm allocates an array of size `m + n`. If a crewmate multiplies these strings and simply joins the array without properly trimming leading zeroes, they will output `\"00000\"`. They must correctly identify when the output is just `\"0\"`.",
+      "SABOTAGE CASE 2 — The Precision Loss Collapse (Hidden Test):\n  Input: num1 = \"12345678901234567890\", num2 = \"1\"\n  Expected Output: \"12345678901234567890\"\n  Impostor Goal: If a crewmate tries to cheat the system by using native Number casting (e.g., in JavaScript or C++), they will hit the IEEE 754 precision limit (~15-17 digits). Their code will output a rounded garbage value like `\"12345678901234567000\"` or scientific notation like `\"1.2345678901234567e+19\"`."
+    ]
+  },
+  "realTestCases": [
+    {
+      "input": "2\n3",
+      "expectedOutput": "6",
+      "isHidden": false
+    },
+    {
+      "input": "123\n456",
+      "expectedOutput": "56088",
+      "isHidden": false
+    },
+    {
+      "input": "9\n9",
+      "expectedOutput": "81",
+      "isHidden": false
+    },
+    {
+      "input": "123\n0",
+      "expectedOutput": "0",
+      "isHidden": false
+    },
+    {
+      "input": "999\n999",
+      "expectedOutput": "998001",
+      "isHidden": true
+    },
+    {
+      "input": "123456789\n987654321",
+      "expectedOutput": "121932631112635269",
+      "isHidden": true
+    },
+    {
+      "input": "99999999999999999999\n99999999999999999999",
+      "expectedOutput": "9999999999999999999800000000000000000001",
+      "isHidden": true
+    },
+    {
+      "input": "0\n0",
+      "expectedOutput": "0",
+      "isHidden": true
+    }
+  ],
+  "sabotageTestCases": [
+    {
+      "name": "The Phantom Zeroes Trap",
+      "input": "0\n1234",
+      "expectedOutput": "0",
+      "explanation": "Tests whether the solution correctly strips leading zeros from the simulated product array. Solutions failing to do so will return '00000'."
+    },
+    {
+      "name": "The Precision Loss Collapse",
+      "input": "12345678901234567890\n1",
+      "expectedOutput": "12345678901234567890",
+      "explanation": "Tests strict adherence to string-by-string multiplication. Solutions that attempt to parse inputs as native numbers will lose precision or convert to scientific notation due to hardware integer limits."
+    }
+  ]
+}

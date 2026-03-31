@@ -1,0 +1,81 @@
+{
+  "mission_id": "GRA_002",
+  "topic": "Graphs",
+  "title": "The Archipelago Anomaly",
+  "briefing": {
+    "base_description": "Given an `m x n` 2D binary grid `grid` which represents a map of '1's (land) and '0's (water), return the number of islands.\n\nAn island is surrounded by water and is formed by connecting adjacent lands horizontally or vertically. You may assume all four edges of the grid are all surrounded by water.\n\nExample 1:\nInput: grid = [\n  [\"1\",\"1\",\"1\",\"1\",\"0\"],\n  [\"1\",\"1\",\"0\",\"1\",\"0\"],\n  [\"1\",\"1\",\"0\",\"0\",\"0\"],\n  [\"0\",\"0\",\"0\",\"0\",\"0\"]\n]\nOutput: 1\n\nExample 2:\nInput: grid = [\n  [\"1\",\"1\",\"0\",\"0\",\"0\"],\n  [\"1\",\"1\",\"0\",\"0\",\"0\"],\n  [\"0\",\"0\",\"1\",\"0\",\"0\"],\n  [\"0\",\"0\",\"0\",\"1\",\"1\"]\n]\nOutput: 3\n\nConstraints:\n* `m == grid.length`\n* `n == grid[i].length`\n* `1 <= m, n <= 300`\n* `grid[i][j]` is '0' or '1'.",
+    "imposter_directive": "🔴 IMPOSTOR EYES ONLY — SABOTAGE PROTOCOL 🔴\nYour mission is to silently corrupt the island detection algorithm. You must write code that LOOKS correct but fails on the two sabotage cases below.\n\nStrategy: Crewmates will use DFS or BFS to traverse the grid. They frequently commit two catastrophic errors: (a) <u>The Diagonal Leak</u>, where they mistakenly check all 8 directions instead of just the 4 cardinal directions, merging islands that should be separate, and (b) <u>The Amnesia Trap</u>, where BFS users mark a cell as visited *after* popping it from the queue rather than *before* pushing it, leading to massive memory bloat and Time Limit Exceeded (TLE) on large open lands. Your job is to exploit these blind spots. Make sure your own submission passes the 4 visible test cases — only the hidden ones should fail.",
+    "constraints": [
+      "1 ≤ m, n ≤ 300",
+      "grid[i][j] is '0' or '1'",
+      "Islands connect ONLY horizontally or vertically (4 directions)",
+      "Time complexity SHOULD be O(M * N) using DFS or BFS with proper visited state management"
+    ],
+    "test_case_explanations": [
+      "Visible Case 1 — Single Mass:\n  Input: A 4x5 grid with one large interconnected landmass.\n  Output: 1\n  Why: All '1's are connected horizontally or vertically.",
+      "Visible Case 2 — Fragmented Archipelago:\n  Input: A 4x5 grid with three distinct landmasses.\n  Output: 3\n  Why: There is a top-left island, a single cell island in the middle, and a bottom-right island.",
+      "Visible Case 3 — Deep Ocean:\n  Input: A 3x3 grid of all '0's.\n  Output: 0\n  Why: There is no land, therefore 0 islands.",
+      "Visible Case 4 — Lone Atoll:\n  Input: A 1x1 grid containing '1'.\n  Output: 1\n  Why: The smallest possible valid grid. It contains exactly 1 island."
+    ],
+    "sabotage_explanations": [
+      "SABOTAGE CASE 1 — The Diagonal Leak (Hidden Test):\n  Input: A 3x3 checkerboard pattern of '1's and '0's.\n  Expected Output: 5\n  Impostor Goal: The problem explicitly states islands connect *only* horizontally or vertically. A checkerboard has 5 distinct islands. If a crewmate's direction array includes diagonals (e.g., `[[-1,-1], [-1,1]...]`), they will bleed across the water gaps and incorrectly return `1`.",
+      "SABOTAGE CASE 2 — The Amnesia Trap (Hidden Test):\n  Input: A 10x10 solid block of '1's.\n  Expected Output: 1\n  Impostor Goal: This targets poorly written BFS implementations. If a crewmate pushes neighbors to the queue and doesn't mark them as visited or '0' *immediately*, multiple current nodes will push the exact same neighbors into the queue simultaneously. The queue size will explode exponentially, causing an OutOfMemory or Time Limit Exceeded error on a grid of solid land."
+    ]
+  },
+  "realTestCases": [
+    {
+      "input": "4 5\n1 1 1 1 0\n1 1 0 1 0\n1 1 0 0 0\n0 0 0 0 0",
+      "expectedOutput": "1",
+      "isHidden": false
+    },
+    {
+      "input": "4 5\n1 1 0 0 0\n1 1 0 0 0\n0 0 1 0 0\n0 0 0 1 1",
+      "expectedOutput": "3",
+      "isHidden": false
+    },
+    {
+      "input": "3 3\n0 0 0\n0 0 0\n0 0 0",
+      "expectedOutput": "0",
+      "isHidden": false
+    },
+    {
+      "input": "1 1\n1",
+      "expectedOutput": "1",
+      "isHidden": false
+    },
+    {
+      "input": "3 3\n1 0 1\n0 1 0\n1 0 1",
+      "expectedOutput": "5",
+      "isHidden": true
+    },
+    {
+      "input": "3 3\n1 1 1\n1 1 1\n1 1 1",
+      "expectedOutput": "1",
+      "isHidden": true
+    },
+    {
+      "input": "4 4\n1 0 0 1\n0 1 1 0\n0 1 1 0\n1 0 0 1",
+      "expectedOutput": "5",
+      "isHidden": true
+    },
+    {
+      "input": "5 5\n1 0 1 0 1\n1 0 1 0 1\n1 0 1 0 1\n1 0 1 0 1\n1 1 1 1 1",
+      "expectedOutput": "1",
+      "isHidden": true
+    }
+  ],
+  "sabotageTestCases": [
+    {
+      "name": "The Diagonal Leak",
+      "input": "3 3\n1 0 1\n0 1 0\n1 0 1",
+      "expectedOutput": "5",
+      "explanation": "Tests for correct 4-directional adjacency logic. Solutions that improperly check all 8 surrounding directions (including diagonals) will merge these 5 distinct 1x1 islands into a single island and output 1."
+    },
+    {
+      "name": "The Amnesia Trap",
+      "input": "10 10\n1 1 1 1 1 1 1 1 1 1\n1 1 1 1 1 1 1 1 1 1\n1 1 1 1 1 1 1 1 1 1\n1 1 1 1 1 1 1 1 1 1\n1 1 1 1 1 1 1 1 1 1\n1 1 1 1 1 1 1 1 1 1\n1 1 1 1 1 1 1 1 1 1\n1 1 1 1 1 1 1 1 1 1\n1 1 1 1 1 1 1 1 1 1\n1 1 1 1 1 1 1 1 1 1",
+      "expectedOutput": "1",
+      "explanation": "Tests for efficient visited state management. Poorly implemented BFS solutions that delay marking a cell as visited until after it is popped will repeatedly push identical coordinates to the queue on large contiguous landmasses, triggering memory limits or TLE."
+    }
+  ]
+}

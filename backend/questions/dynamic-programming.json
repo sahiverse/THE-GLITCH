@@ -1,0 +1,83 @@
+{
+  "mission_id": "DP_001",
+  "topic": "Dynamic Programming",
+  "title": "The Currency Cipher",
+  "briefing": {
+    "base_description": "You are given an integer array `coins` representing coins of different denominations and an integer `amount` representing a total amount of money.\n\nReturn the fewest number of coins that you need to make up that amount. If that amount of money cannot be made up by any combination of the coins, return `-1`.\n\nYou may assume that you have an infinite number of each kind of coin.\n\nExample 1:\nInput: coins = [1,2,5], amount = 11\nOutput: 3\nExplanation: 11 = 5 + 5 + 1\n\nExample 2:\nInput: coins = [2], amount = 3\nOutput: -1\n\nExample 3:\nInput: coins = [1], amount = 0\nOutput: 0\n\nConstraints:\n* `1 <= coins.length <= 12`\n* `1 <= coins[i] <= 2^31 - 1`\n* `0 <= amount <= 10^4`",
+    "imposter_directive": "🔴 IMPOSTOR EYES ONLY — SABOTAGE PROTOCOL 🔴\nYour mission is to silently corrupt the coin change calculation. You must write code that LOOKS correct but fails on the sabotage cases below.\n\nStrategy: Most crewmates will either (a) use <u>greedy algorithms</u> which fail for non-canonical coin systems, or (b) implement <u>recursive solutions without proper memoization</u> causing exponential time complexity. Your job is to exploit both weaknesses using the cases provided. Make sure your own submission passes the visible test cases — only the hidden ones should fail.",
+    "constraints": [
+      "1 ≤ coins.length ≤ 12",
+      "1 ≤ coins[i] ≤ 2^31 - 1",
+      "0 ≤ amount ≤ 10^4",
+      "You have an infinite number of each coin",
+      "Time complexity SHOULD be O(amount × coins.length) using dynamic programming",
+      "Space complexity SHOULD be O(amount)"
+    ],
+    "test_case_explanations": [
+      "Visible Case 1 — Standard Coin Denominations:\n  Input:  coins = [1,2,5], amount = 11\n  Output: 3\n  Why: The minimum coins needed is 3: 5 + 5 + 1 = 11. Other combinations like 5 + 2 + 2 + 2 would use 4 coins.",
+
+      "Visible Case 2 — Impossible Amount:\n  Input:  coins = [2], amount = 3\n  Output: -1\n  Why: Only coin 2 is available. No combination of 2's can make 3, so return -1."
+    ],
+    "sabotage_explanations": [
+      "SABOTAGE CASE 1 — The Greedy Failure Trap (Hidden Test):\n  Input:  coins = [3, 4], amount = 6\n  Expected Output: 2\n  Impostor Goal: Crewmates using greedy algorithms (always picking the largest coin) will pick 4, leaving 2, which cannot be made. They'll incorrectly return -1. Dynamic programming is the only correct approach. Greedy solutions fail on non-canonical coin systems.",
+
+      "SABOTAGE CASE 2 — Exponential Time Avalanche (Hidden Test):\n  Input:  coins = [1, 2, 5], amount = 100\n  Expected Output: 20\n  Impostor Goal: Recursive solutions without memoization will explore exponentially many paths and TLE. Only bottom-up DP or top-down DP with memoization will pass. A naive brute-force recursion will timeout on amount=100."
+    ]
+  },
+  "realTestCases": [
+    {
+      "input": "3 1 2 5\n11",
+      "expectedOutput": "3",
+      "isHidden": false
+    },
+    {
+      "input": "1 2\n3",
+      "expectedOutput": "-1",
+      "isHidden": false
+    },
+    {
+      "input": "1 1\n0",
+      "expectedOutput": "0",
+      "isHidden": false
+    },
+    {
+      "input": "2 3 4\n6",
+      "expectedOutput": "2",
+      "isHidden": true
+    },
+    {
+      "input": "3 1 2 5\n100",
+      "expectedOutput": "20",
+      "isHidden": true
+    },
+    {
+      "input": "4 10 1 2 5\n7",
+      "expectedOutput": "1",
+      "isHidden": true
+    },
+    {
+      "input": "3 2 7 10\n15",
+      "expectedOutput": "2",
+      "isHidden": true
+    },
+    {
+      "input": "2 3 6\n9",
+      "expectedOutput": "3",
+      "isHidden": true
+    }
+  ],
+  "sabotageTestCases": [
+    {
+      "name": "The Greedy Failure Trap",
+      "input": "2 3 4\n6",
+      "expectedOutput": "2",
+      "explanation": "Crewmates using greedy algorithms (always picking the largest coin first) will pick 4, leaving 2, which cannot be made from coins [3, 4]. They'll incorrectly return -1. Dynamic programming is the only correct approach for non-canonical coin systems. Greedy works for USD denominations [1, 5, 10, 25] but fails here."
+    },
+    {
+      "name": "The Exponential Time Avalanche",
+      "input": "3 1 2 5\n100",
+      "expectedOutput": "20",
+      "explanation": "Recursive solutions without memoization will explore exponentially many paths (roughly 2^100) and timeout. Only bottom-up DP or top-down DP with memoization (both O(amount × coins.length)) will pass within time limits. A naive brute-force recursion will TLE spectacularly on amount=100."
+    }
+  ]
+}

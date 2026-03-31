@@ -17,7 +17,6 @@ const CivilianDied: React.FC<CivilianDiedProps> = ({ civilianName, onPlayAgain }
   const [status, setStatus] = useState<RevealStatus>(RevealStatus.IDLE);
   const [subtitleVisible, setSubtitleVisible] = useState(false);
   const [buttonVisible, setButtonVisible] = useState(false);
-  const [countdown, setCountdown] = useState(4);
   const imageUrl = '/image.jpg';
 
   useEffect(() => {
@@ -40,18 +39,7 @@ const CivilianDied: React.FC<CivilianDiedProps> = ({ civilianName, onPlayAgain }
     return () => clearTimeout(timer);
   }, []);
 
-  // Auto-redirect countdown after button appears
-  useEffect(() => {
-    if (buttonVisible && countdown > 0) {
-      const timer = setTimeout(() => {
-        setCountdown(countdown - 1);
-      }, 1000);
-      return () => clearTimeout(timer);
-    } else if (buttonVisible && countdown === 0) {
-      // Auto-redirect to game room
-      onPlayAgain();
-    }
-  }, [buttonVisible, countdown, onPlayAgain]);
+
 
   return (
     <div className="relative h-screen w-screen bg-retro-sky flex flex-col items-center justify-center overflow-hidden">
@@ -119,7 +107,7 @@ const CivilianDied: React.FC<CivilianDiedProps> = ({ civilianName, onPlayAgain }
             }}
             className="px-6 py-3 bg-retro-yellow text-retro-black font-pixel text-sm border-4 border-retro-black border-b-8 border-r-8 active:border-b-4 active:border-r-4 active:translate-y-1 active:translate-x-1 transition-all"
           >
-            BACK TO GAME ROOM ({countdown})
+            BACK TO GAME ROOM
           </button>
         </div>
       </div>

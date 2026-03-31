@@ -1,0 +1,80 @@
+{
+  "mission_id": "SLD_006",
+  "topic": "Sliding Window",
+  "title": "The Permutation Protocol",
+  "briefing": {
+    "base_description": "Given two strings `s1` and `s2`, return `true` if `s2` contains a permutation of `s1`, or `false` otherwise.\n\nIn other words, return `true` if one of `s1`'s permutations is the substring of `s2`.\n\nExample 1:\nInput: s1 = \"ab\", s2 = \"eidbaooo\"\nOutput: true\nExplanation: s2 contains one permutation of s1 (\"ba\").\n\nExample 2:\nInput: s1 = \"ab\", s2 = \"eidboaoo\"\nOutput: false\n\nConstraints:\n* `1 <= s1.length, s2.length <= 10^4`\n* `s1` and `s2` consist of lowercase English letters.",
+    "imposter_directive": "🔴 IMPOSTOR EYES ONLY — SABOTAGE PROTOCOL 🔴\nYour mission is to silently corrupt the sliding window frequency tracking. You must write code that LOOKS correct but fails on the two sabotage cases below.\n\nStrategy: Crewmates usually make one of two critical errors here: (a) <u>The Set Trap</u>, where they just check if the current window contains all the *unique* characters of `s1` but ignore the exact counts, or (b) <u>The Stale Pointer Fumble</u>, where they correctly expand the right side of the window but forget to restore/decrement the frequency of the character left behind on the left side. Your job is to exploit these blind spots. Make sure your own submission passes the 4 visible test cases — only the hidden ones should fail.",
+    "constraints": [
+      "1 ≤ s1.length, s2.length ≤ 10^4",
+      "s1 and s2 consist of lowercase English letters",
+      "Time complexity SHOULD be O(N) — ideally using a fixed-size sliding window of length s1.length and an array of size 26 for frequencies."
+    ],
+    "test_case_explanations": [
+      "Visible Case 1 — Basic Match:\n  Input: s1 = \"ab\", s2 = \"eidbaooo\"\n  Output: true\n  Why: The substring \"ba\" is a valid permutation of \"ab\".",
+      "Visible Case 2 — Broken Sequence:\n  Input: s1 = \"ab\", s2 = \"eidboaoo\"\n  Output: false\n  Why: The characters 'a' and 'b' are present, but not adjacently. No valid permutation exists.",
+      "Visible Case 3 — Overlapping Scenarios:\n  Input: s1 = \"adc\", s2 = \"dcda\"\n  Output: true\n  Why: The substring \"cda\" (and \"adc\" at the end) are valid permutations of \"adc\".",
+      "Visible Case 4 — Smallest Valid Input:\n  Input: s1 = \"a\", s2 = \"a\"\n  Output: true\n  Why: \"a\" is a permutation of itself."
+    ],
+    "sabotage_explanations": [
+      "SABOTAGE CASE 1 — The Set Conversion Trap (Hidden Test):\n  Input: s1 = \"aab\", s2 = \"abb\"\n  Expected Output: false\n  Impostor Goal: Crewmates who cheat by converting the strings into HashSets (checking if all characters exist rather than strictly counting frequencies) will incorrectly return `true`. \"abb\" has the same unique letters as \"aab\", but the wrong permutation counts.",
+      "SABOTAGE CASE 2 — The Stale Window Trap (Hidden Test):\n  Input: s1 = \"hello\", s2 = \"ooolleoooleh\"\n  Expected Output: false\n  Impostor Goal: If a crewmate attempts to slide the window but fails to cleanly add the new right character AND remove the old left character simultaneously, their frequency array will desync. They might flag \"ooolle\" as a match because it has the right length and contains all the required letters, but it has too many 'o's."
+    ]
+  },
+  "realTestCases": [
+    {
+      "input": "ab\neidbaooo",
+      "expectedOutput": "true",
+      "isHidden": false
+    },
+    {
+      "input": "ab\neidboaoo",
+      "expectedOutput": "false",
+      "isHidden": false
+    },
+    {
+      "input": "adc\ndcda",
+      "expectedOutput": "true",
+      "isHidden": false
+    },
+    {
+      "input": "a\na",
+      "expectedOutput": "true",
+      "isHidden": false
+    },
+    {
+      "input": "aab\nabb",
+      "expectedOutput": "false",
+      "isHidden": true
+    },
+    {
+      "input": "hello\nooolleoooleh",
+      "expectedOutput": "false",
+      "isHidden": true
+    },
+    {
+      "input": "abc\nccccbbbbaaaa",
+      "expectedOutput": "false",
+      "isHidden": true
+    },
+    {
+      "input": "xyz\nxzy",
+      "expectedOutput": "true",
+      "isHidden": true
+    }
+  ],
+  "sabotageTestCases": [
+    {
+      "name": "The Set Conversion Trap",
+      "input": "aab\nabb",
+      "expectedOutput": "false",
+      "explanation": "Tests whether the solution respects exact character frequencies. Solutions using HashSets instead of HashMaps/Arrays will mistakenly return true because the unique characters match."
+    },
+    {
+      "name": "The Stale Window Trap",
+      "input": "hello\nooolleoooleh",
+      "expectedOutput": "false",
+      "explanation": "Tests fixed-size window constraints. Solutions that fail to decrement the character falling out of the left side of the sliding window will accumulate stale counts and yield a false positive."
+    }
+  ]
+}

@@ -14,130 +14,47 @@ interface RoomLobbyProps {
   roomName: string;
   playerName: string;
   isHost: boolean;
+  maxPlayers: number;
+  roomData: any;
+  yourPlayer: any;
+  socket: any;
   onStart: () => void;
   onBack: () => void;
 }
 
-const RoomLobby: React.FC<RoomLobbyProps> = ({ inviteCode, roomName, playerName, isHost, onStart, onBack }) => {
-  const [isReady, setIsReady] = useState(false);
-  const [inputCode, setInputCode] = useState(isHost ? inviteCode : '');
-  const [isVerified, setIsVerified] = useState(isHost);
-  
-  // Define the 6 colors for players
-  const playerColors = [
-    { name: 'blue', class: 'text-blue-500', hex: '#3b82f6' },
-    { name: 'pink', class: 'text-pink-500', hex: '#ec4899' },
-    { name: 'red', class: 'text-red-500', hex: '#ef4444' },
-    { name: 'green', class: 'text-green-500', hex: '#10b981' },
-    { name: 'orange', class: 'text-orange-500', hex: '#f97316' },
-    { name: 'purple', class: 'text-purple-500', hex: '#a855f7' }
-  ];
+const RoomLobby: React.FC<RoomLobbyProps> = ({ inviteCode, roomName, playerName, isHost, maxPlayers, roomData, yourPlayer, socket, onStart, onBack }) => {
+  const [localReady, setLocalReady] = useState(false);
 
-  // Assign random colors to players
-  const [players, setPlayers] = useState<Player[]>([
-    { id: '2', name: 'AHMAD', color: playerColors[1].hex, isHost: false, isReady: true },
-  ]);
-  const [error, setError] = useState(false);
+  // Get ready state from yourPlayer data
+  const isReady = yourPlayer?.isReady || false;
 
   useEffect(() => {
-    if (!isVerified) return;
-    const timer1 = setTimeout(() => {
-      setPlayers(prev => [
-        ...prev, 
-        { id: '3', name: 'LUIGI_99', color: playerColors[3].hex, isHost: false, isReady: false }
-      ]);
-    }, 2000);
-    const timer2 = setTimeout(() => {
-      setPlayers(prev => [
-        ...prev, 
-        { id: '4', name: 'PIXEL_QUEEN', color: playerColors[2].hex, isHost: false, isReady: true }
-      ]);
-    }, 5000);
-    return () => {
-      clearTimeout(timer1);
-      clearTimeout(timer2);
-    };
-  }, [isVerified]);
-
-  useEffect(() => {
-    const allPlayersReady = players.every(p => p.isReady) && isReady;
-    if (allPlayersReady && players.length > 0) {
-      const timer = setTimeout(() => onStart(), 1000);
-      return () => clearTimeout(timer);
+    if (yourPlayer) {
+      setLocalReady(yourPlayer.isReady);
     }
-  }, [players, isReady, onStart]);
+  }, [yourPlayer]);
 
   const toggleReady = () => {
-    setIsReady(!isReady);
-    if (!isReady) {
-      setPlayers(prev => prev.map(p => ({...p, isReady: true})));
-    }
+    const newReadyState = !localReady;
+    setLocalReady(newReadyState);
+    
+    // Emit ready state to server
+    socket?.emit('player_ready', {
+      code: inviteCode,
+      isReady: newReadyState
+    });
   };
 
-  const handleVerify = () => {
-    setIsVerified(true);
-    setError(false);
+  const handleLeaveRoom = () => {
+    console.log('🚪 handleLeaveRoom called, emitting leave_room with code:', inviteCode);
+    socket?.emit('leave_room', {
+      code: inviteCode
+    });
+    onBack();
   };
 
-  const currentPlayer: Player = {
-    id: '1',
-    name: playerName || 'PLAYER',
-    color: playerColors[Math.floor(Math.random() * playerColors.length)].hex,
-    isHost: isHost,
-    isReady: isReady
-  };
-
-  const displayPlayers = [currentPlayer, ...players];
-  const displayedTitle = isHost ? (roomName || 'BATTLE ARENA') : (inviteCode || inputCode || 'BATTLE ARENA');
-
-  if (!isVerified) {
-    return (
-      <div className="flex flex-col items-center w-full max-w-md animate-in fade-in slide-in-from-bottom-4 duration-500">
-        <h1 className="text-3xl md:text-4xl text-[#f19121] drop-shadow-[4px_4px_0px_#000] uppercase mb-8 font-pixel text-center">
-          JOIN ROOM
-        </h1>
-
-        <div className={`w-full bg-[#f8f0d8] border-4 border-retro-black p-8 shadow-[6px_6px_0_0_#000] relative flex flex-col items-center transition-transform ${error ? 'animate-shake' : ''}`}>
-          <p className="font-vcr text-lg text-retro-brick mb-6 uppercase tracking-tight text-center">
-            PROVE YOU BELONG HERE.<br/>ENTER THE INVITE CODE:
-          </p>
-          
-          <input 
-            type="text" 
-            autoFocus
-            value={inputCode}
-            placeholder="INVITE CODE"
-            maxLength={20}
-            onChange={(e) => setInputCode(e.target.value.toUpperCase())}
-            onKeyDown={(e) => e.key === 'Enter' && handleVerify()}
-            className={`w-full bg-[#e8dab5] border-4 border-retro-black p-4 font-pixel text-2xl text-center outline-none focus:bg-white transition-colors placeholder:opacity-20 mb-2 ${error ? 'text-retro-red border-retro-red' : 'text-retro-red'}`}
-          />
-
-          <div className="h-6 mb-4">
-            {error && <p className="font-vcr text-sm text-retro-red uppercase animate-pulse">INVALID INVITE CODE</p>}
-          </div>
-
-          <RetroButton 
-            variant="success" 
-            onClick={handleVerify}
-            className="w-full py-4 text-xl"
-            disabled={inputCode.length < 1}
-          >
-            ENTER ROOM
-          </RetroButton>
-
-          <div className="mt-8">
-            <button 
-              onClick={onBack}
-              className="font-vcr text-sm text-retro-black opacity-40 hover:opacity-100 uppercase underline transition-opacity"
-            >
-              EXIT ROOM
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const displayedTitle = roomName || 'BATTLE ARENA';
+  const players = roomData?.players || [];
 
   return (
     <div className="flex flex-col items-center w-full max-w-md animate-in fade-in zoom-in duration-500">
@@ -168,7 +85,7 @@ const RoomLobby: React.FC<RoomLobbyProps> = ({ inviteCode, roomName, playerName,
         ) : (
           <div className="text-center">
             <span className="font-vcr text-xs text-retro-brick mb-1 uppercase opacity-50 block">Connected to Area:</span>
-            <span className="font-pixel text-xl text-[#55a039] tracking-[0.2em]">{inviteCode || inputCode}</span>
+            <span className="font-pixel text-xl text-[#55a039] tracking-[0.2em]">{inviteCode}</span>
           </div>
         )}
       </div>
@@ -179,14 +96,16 @@ const RoomLobby: React.FC<RoomLobbyProps> = ({ inviteCode, roomName, playerName,
             <div className="flex items-center gap-3">
               <span className="text-xl">👥</span>
               <h2 className="font-vcr text-lg text-retro-black uppercase">
-                Players ({displayPlayers.length}/5)
+                Players ({players.length}/{maxPlayers})
               </h2>
             </div>
             {isReady && <span className="text-[#55a039] font-vcr text-xs animate-pulse">GETTING READY...</span>}
           </div>
 
           <div className="flex flex-col gap-4">
-            {displayPlayers.map((p) => (
+            {players.map((p) => {
+              console.log(`Player ${p.name}: isReady=${p.isReady}, id=${p.id}, yourPlayerId=${yourPlayer?.id}`);
+              return (
               <div 
                 key={p.id} 
                 className={`bg-white border-4 border-retro-black p-3 flex items-center justify-between shadow-[4px_4px_0_0_#000] transition-all ${p.isReady ? 'border-[#55a039]' : 'opacity-90'}`}
@@ -199,36 +118,37 @@ const RoomLobby: React.FC<RoomLobbyProps> = ({ inviteCode, roomName, playerName,
                     <div className="absolute top-0.5 left-0.5 w-1.5 h-1.5 bg-white opacity-40"></div>
                   </div>
                   <span 
-                    className={`font-vcr text-lg tracking-tight ${p.id === '1' ? 'text-red-500' : ''}`}
-                    style={{ color: p.id !== '1' ? p.color : undefined }}
+                    className="font-vcr text-lg tracking-tight"
+                    style={{ color: p.color }}
                   >
-                    {p.name} {p.id === '1' ? '(YOU)' : ''}
+                    {p.name} {p.id === yourPlayer?.id ? '(YOU)' : ''}
                   </span>
                 </div>
                 <div className="flex items-center gap-3">
-                  {p.isReady && (
+                  {(p.id === yourPlayer?.id ? localReady : p.isReady) && (
                     <div className="bg-[#55a039] text-white px-2 py-1 border-2 border-retro-black text-[10px] font-vcr animate-bounce">
                       READY
                     </div>
                   )}
                 </div>
               </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 
         <div className="flex flex-col items-center gap-4">
           <RetroButton 
-            variant={isReady ? "danger" : "success"} 
+            variant={localReady ? "danger" : "success"} 
             onClick={toggleReady}
             className="w-full py-5 text-2xl"
           >
-            {isReady ? "NOT READY" : "READY!"}
+            {localReady ? "NOT READY" : "READY!"}
           </RetroButton>
           
           <div className="flex gap-4 items-center mt-2">
             <button 
-              onClick={onBack}
+              onClick={handleLeaveRoom}
               className="font-vcr text-sm text-retro-black opacity-40 hover:opacity-100 uppercase underline"
             >
               EXIT ROOM

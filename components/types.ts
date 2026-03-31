@@ -16,8 +16,10 @@ export interface ChatMessage {
 export interface GameState {
   aliveCount: number;
   totalPlayers: number;
+  maxPlayers: number;
   timeLeft: number;
   topic: string;
   round: number;
   totalRounds: number;
+  meetingsLeft: number;
 }

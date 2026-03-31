@@ -9,9 +9,10 @@ enum RevealStatus {
 interface ImposterRevealProps {
   onComplete: () => void;
   category: 'SOURCE' | 'README';
+  totalRounds: number;
 }
 
-const ImposterReveal: React.FC<ImposterRevealProps> = ({ onComplete, category }) => {
+const ImposterReveal: React.FC<ImposterRevealProps> = ({ onComplete, category, totalRounds }) => {
   const [status, setStatus] = useState<RevealStatus>(RevealStatus.IDLE);
   const [subtitleVisible, setSubtitleVisible] = useState(false);
   const imageUrl = '/bomb.jpg';
@@ -89,11 +90,11 @@ const ImposterReveal: React.FC<ImposterRevealProps> = ({ onComplete, category })
               {category === 'SOURCE' ? (
                 <>
                   sabotage the code without getting caught.<br/>
-                  fail the code before round 3 !
+                  fail the code before round {totalRounds} !
                 </>
               ) : (
                 <>
-                  Gaslight the team into a false approach<br/>without getting caught (until round 3).
+                  Gaslight the team into a false approach<br/>without getting caught (until the final round ends).
                 </>
               )}
             </p>

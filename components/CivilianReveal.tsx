@@ -87,9 +87,9 @@ const CivilianReveal: React.FC<CivilianRevealProps> = ({ onComplete, category })
               ${subtitleVisible ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 -translate-y-4 scale-90'}
             `}>
               {category === 'SOURCE' ? (
-                "Fix the bugs and pass the test cases before round 3!"
+                "Fix the bugs and pass the test cases before the final round ends!"
               ) : (
-                "Find a fix and provide the optimal approach before round 3 ends"
+                "Find a fix and provide the optimal approach before the final round ends"
               )}
             </p>
         </div>

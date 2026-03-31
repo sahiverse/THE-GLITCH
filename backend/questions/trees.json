@@ -1,0 +1,81 @@
+{
+  "mission_id": "TRE_010",
+  "topic": "Trees",
+  "title": "The Breadth-First Breach",
+  "briefing": {
+    "base_description": "Given the `root` of a binary tree, return the level order traversal of its nodes' values. (i.e., from left to right, level by level).\n\nExample 1:\nInput: root = [3,9,20,null,null,15,7]\nOutput: [[3],[9,20],[15,7]]\n\nExample 2:\nInput: root = [1]\nOutput: [[1]]\n\nExample 3:\nInput: root = []\nOutput: []\n\nConstraints:\n* The number of nodes in the tree is in the range `[0, 2000]`.\n* `-1000 <= Node.val <= 1000`",
+    "imposter_directive": "🔴 IMPOSTOR EYES ONLY — SABOTAGE PROTOCOL 🔴\nYour mission is to silently corrupt the level grouping logic. You must write code that LOOKS correct but fails on the two sabotage cases below.\n\nStrategy: Crewmates usually use a Queue for BFS, but they often make two fatal architectural errors: (a) <u>The Dynamic Queue Trap</u>, where they evaluate `queue.size()` directly inside the `for` loop condition instead of locking it in a variable first, causing the level array to absorb nodes from the next level, and (b) <u>The Null Pointer Trap</u>, where they push `node.left` and `node.right` to the queue blindly without checking if they are `null`. Your job is to exploit these blind spots. Make sure your own submission passes the 4 visible test cases — only the hidden ones should fail.",
+    "constraints": [
+      "0 ≤ Number of nodes ≤ 2000",
+      "-1000 ≤ Node.val ≤ 1000",
+      "Must return a 2D array/list grouping nodes exactly by depth",
+      "Time complexity SHOULD be O(N) using a Queue for Breadth-First Search"
+    ],
+    "test_case_explanations": [
+      "Visible Case 1 — Standard Tree:\n  Input: root = [3,9,20,null,null,15,7]\n  Output: [[3],[9,20],[15,7]]\n  Why: Level 0 has 3. Level 1 has 9, 20. Level 2 has 15, 7.",
+      "Visible Case 2 — Single Node:\n  Input: root = [1]\n  Output: [[1]]\n  Why: Smallest non-empty valid tree.",
+      "Visible Case 3 — Empty Tree:\n  Input: root = []\n  Output: []\n  Why: Testing edge case for an empty input. Must handle gracefully without crashing.",
+      "Visible Case 4 — Simple Full Tree:\n  Input: root = [1,2,3,4,5,6,7]\n  Output: [[1],[2,3],[4,5,6,7]]\n  Why: A perfectly balanced binary tree with 3 levels."
+    ],
+    "sabotage_explanations": [
+      "SABOTAGE CASE 1 — The Dynamic Queue Trap (Hidden Test):\n  Input: root = [1,2,3,4,5]\n  Expected Output: [[1],[2,3],[4,5]]\n  Impostor Goal: If a crewmate writes `for (int i = 0; i < queue.size(); i++)` instead of `int size = queue.size(); for (int i = 0; i < size; i++)`, the loop boundary keeps growing as children are pushed. They will output a completely flattened array `[[1,2,3,4,5]]` instead of grouping by level.",
+      "SABOTAGE CASE 2 — The Null Pointer Trap (Hidden Test):\n  Input: root = [1,2,null,3,4]\n  Expected Output: [[1],[2],[3,4]]\n  Impostor Goal: If a crewmate pushes children to the queue without checking `if (node.left != null)`, their queue fills with `null` references. When they pop the queue and attempt to read `node.val`, their program will crash with a NullPointerException, or output literal nulls `[[1],[2,null],[3,4]]`."
+    ]
+  },
+  "realTestCases": [
+    {
+      "input": "[3,9,20,null,null,15,7]",
+      "expectedOutput": "[[3],[9,20],[15,7]]",
+      "isHidden": false
+    },
+    {
+      "input": "[1]",
+      "expectedOutput": "[[1]]",
+      "isHidden": false
+    },
+    {
+      "input": "[]",
+      "expectedOutput": "[]",
+      "isHidden": false
+    },
+    {
+      "input": "[1,2,3,4,5,6,7]",
+      "expectedOutput": "[[1],[2,3],[4,5,6,7]]",
+      "isHidden": false
+    },
+    {
+      "input": "[1,2,3,4,5]",
+      "expectedOutput": "[[1],[2,3],[4,5]]",
+      "isHidden": true
+    },
+    {
+      "input": "[1,2,null,3,4]",
+      "expectedOutput": "[[1],[2],[3,4]]",
+      "isHidden": true
+    },
+    {
+      "input": "[1,null,2,null,3,null,4,null,5]",
+      "expectedOutput": "[[1],[2],[3],[4],[5]]",
+      "isHidden": true
+    },
+    {
+      "input": "[1,2,null,3,null,4,null,5]",
+      "expectedOutput": "[[1],[2],[3],[4],[5]]",
+      "isHidden": true
+    }
+  ],
+  "sabotageTestCases": [
+    {
+      "name": "The Dynamic Queue Trap",
+      "input": "[1,2,3,4,5]",
+      "expectedOutput": "[[1],[2,3],[4,5]]",
+      "explanation": "Tests for correct queue size capturing. If the loop uses the dynamic `queue.size()` instead of a pre-calculated snapshot, the inner loop consumes nodes from the next level immediately."
+    },
+    {
+      "name": "The Null Pointer Trap",
+      "input": "[1,2,null,3,4]",
+      "expectedOutput": "[[1],[2],[3,4]]",
+      "explanation": "Tests for proper null-checking before enqueueing. Unchecked pushes lead to NullPointerExceptions when expanding an asymmetric tree."
+    }
+  ]
+}

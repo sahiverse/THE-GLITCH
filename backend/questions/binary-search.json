@@ -1,0 +1,87 @@
+{
+  "mission_id": "BS_001",
+  "topic": "Binary Search",
+  "title": "The Rotation Decoder",
+  "briefing": {
+    "base_description": "Suppose an array of length `n` sorted in ascending order is rotated between 1 and n times. For example, the array `nums = [0,1,2,4,5,6,7]` might become:\n* `[4,5,6,7,0,1,2]` if it was rotated `4` times.\n* `[0,1,2,4,5,6,7]` if it was rotated `7` times.\n\nNotice that rotating an array `[a[0], a[1], a[2], ..., a[n-1]]` 1 time results in the array `[a[n-1], a[0], a[1], a[2], ..., a[n-2]]`.\n\nGiven the sorted rotated array `nums` of unique elements, return the minimum element of this array.\n\nYou must write an algorithm that runs in `O(log n) time` — <u>binary search is REQUIRED</u>.\n\nExample 1:\nInput: nums = [3,4,5,1,2]\nOutput: 1\nExplanation: The original array was [1,2,3,4,5] rotated 3 times.\n\nExample 2:\nInput: nums = [4,5,6,7,0,1,2]\nOutput: 0\nExplanation: The original array was [0,1,2,4,5,6,7] and it was rotated 4 times.\n\nExample 3:\nInput: nums = [11,13,15,17]\nOutput: 11\nExplanation: The original array was [11,13,15,17] and it was rotated 4 times.\n\nConstraints:\n* `n == nums.length`\n* `1 <= n <= 5000`\n* `-5000 <= nums[i] <= 5000`\n* All the integers of `nums` are unique.\n* `nums` is sorted and rotated between `1` and `n` times.",
+    "imposter_directive": "🔴 IMPOSTOR EYES ONLY — SABOTAGE PROTOCOL 🔴\nYour mission is to silently corrupt the minimum element detection. You must write code that LOOKS correct but fails on the sabotage cases below.\n\nStrategy: Most crewmates will either (a) use a <u>linear O(n) scan instead of binary search</u>, or (b) implement <u>binary search with flawed pivot comparisons</u> that don't properly identify which half is sorted. Your job is to exploit both weaknesses using the cases provided. Make sure your own submission passes the visible test cases — only the hidden ones should fail.",
+    "constraints": [
+      "n == nums.length",
+      "1 ≤ n ≤ 5000",
+      "-5000 ≤ nums[i] ≤ 5000",
+      "All integers are unique",
+      "nums is sorted and rotated between 1 and n times",
+      "Time complexity MUST be O(log n) — binary search is required"
+    ],
+    "test_case_explanations": [
+      "Visible Case 1 — Rotated 3 Times:\n  Input:  nums = [3,4,5,1,2]\n  Output: 1\n  Why: The array has two sorted segments: [3,4,5] and [1,2]. The minimum is at the start of the second segment.",
+
+      "Visible Case 2 — Rotated 4 Times:\n  Input:  nums = [4,5,6,7,0,1,2]\n  Output: 0\n  Why: The array has two sorted segments: [4,5,6,7] and [0,1,2]. The minimum is at the pivot point."
+    ],
+    "sabotage_explanations": [
+      "SABOTAGE CASE 1 — The Negative Number Trap (Hidden Test):\n  Input:  nums = [-5,-3,-1,0,2,4,6]\n  Expected Output: -5\n  Impostor Goal: Crewmates using incorrect pivot comparisons or sign-based logic will fail with negative numbers. The binary search must work correctly regardless of whether numbers are negative or positive.",
+
+      "SABOTAGE CASE 2 — The Linear Scan Avalanche (Hidden Test):\n  Input:  nums = [1000, 1001, 1002, 1003, 1004, 1005, 1006, 1007, 1008, 1009, 0, 1, 2, 3, 4, 5, ... 4999 elements total]\n  Expected Output: 0\n  Impostor Goal: Any solution using linear O(n) scan will TLE on large rotated arrays. Only true binary search implementations with O(log n) will pass. Solutions that check if array is rotated first (linear operation) will fail.",
+
+      "SABOTAGE CASE 3 — No Rotation Edge Case (Hidden Test):\n  Input:  nums = [1,2,3,4,5,6,7]\n  Expected Output: 1\n  Impostor Goal: Crewmates with buggy binary search logic might crash or return wrong value when array is not rotated (rotated n times). The algorithm must handle this gracefully.",
+
+      "SABOTAGE CASE 4 — Single Element Array (Hidden Test):\n  Input:  nums = [42]\n  Expected Output: 42\n  Impostor Goal: Edge case that catches implementations with array bounds issues or incorrect base case handling in binary search."
+    ]
+  },
+  "realTestCases": [
+    {
+      "input": "5\n3 4 5 1 2",
+      "expectedOutput": "1",
+      "isHidden": false
+    },
+    {
+      "input": "7\n4 5 6 7 0 1 2",
+      "expectedOutput": "0",
+      "isHidden": false
+    },
+    {
+      "input": "4\n11 13 15 17",
+      "expectedOutput": "11",
+      "isHidden": false
+    },
+    {
+      "input": "7\n-5 -3 -1 0 2 4 6",
+      "expectedOutput": "-5",
+      "isHidden": true
+    },
+    {
+      "input": "7\n1 2 3 4 5 6 7",
+      "expectedOutput": "1",
+      "isHidden": true
+    },
+    {
+      "input": "1\n42",
+      "expectedOutput": "42",
+      "isHidden": true
+    },
+    {
+      "input": "6\n5 1 2 3 4 5",
+      "expectedOutput": "1",
+      "isHidden": true
+    },
+    {
+      "input": "8\n6 7 8 9 10 1 2 3",
+      "expectedOutput": "1",
+      "isHidden": true
+    }
+  ],
+  "sabotageTestCases": [
+    {
+      "name": "The Negative Number Trap",
+      "input": "7\n-5 -3 -1 0 2 4 6",
+      "expectedOutput": "-5",
+      "explanation": "Crewmates using incorrect pivot comparisons or sign-based logic will fail with negative numbers. The binary search must work correctly regardless of whether numbers are negative or positive. Any implementation that assumes positive numbers only will be caught here."
+    },
+    {
+      "name": "The Linear Scan Avalanche",
+      "input": "5000\n2500 2501 2502 2503 2504 2505 [... continues to 4999 ...] 0 1 2 [... continues to 2499 ...]",
+      "expectedOutput": "0",
+      "explanation": "Any solution using linear O(n) scan will TLE on large rotated arrays. Only true binary search implementations with O(log n) complexity will pass within time limits. Solutions that perform a linear check (like finding rotation point or verifying if array is rotated) before binary search will fail."
+    }
+  ]
+}

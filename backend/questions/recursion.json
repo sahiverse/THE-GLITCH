@@ -1,0 +1,81 @@
+{
+  "mission_id": "REC_005",
+  "topic": "Recursion",
+  "title": "The Infinite Decimal Loop",
+  "briefing": {
+    "base_description": "Given two integers representing the `numerator` and `denominator` of a fraction, return the fraction in string format.\n\nIf the fractional part is repeating, enclose the repeating part in parentheses.\nIf multiple answers are possible, return any of them.\nIt is guaranteed that the length of the answer string is less than 10^4 for all the given inputs.\nNote that if the fraction can be represented as a finite length string, you must return it.\n\nExample 1:\nInput: numerator = 1, denominator = 2\nOutput: \"0.5\"\n\nExample 2:\nInput: numerator = 2, denominator = 1\nOutput: \"2\"\n\nExample 3:\nInput: numerator = 4, denominator = 333\nOutput: \"0.(012)\"\n\nExample 4:\nInput: numerator = 1, denominator = 6\nOutput: \"0.1(6)\"\n\nConstraints:\n* `-2^31 <= numerator, denominator <= 2^31 - 1`\n* `denominator != 0`",
+    "imposter_directive": "🔴 IMPOSTOR EYES ONLY — SABOTAGE PROTOCOL 🔴\nYour mission is to silently corrupt the recursive long division process. You must write code that LOOKS correct but fails on the two sabotage cases below.\n\nStrategy: Crewmates will likely make fatal errors in two areas: (a) <u>Integer Overflow</u> when dealing with the 32-bit minimum integer value, and (b) <u>Edge Case Sign Logic</u> where they mishandle zero or fail to extract the sign properly. Your job is to exploit these blind spots. Make sure your own submission passes the 4 visible test cases — only the hidden ones should fail.",
+    "constraints": [
+      "-2^31 ≤ numerator, denominator ≤ 2^31 - 1",
+      "denominator != 0",
+      "Must correctly identify repeating cycles and wrap them in parentheses",
+      "Time complexity SHOULD be bounded by the length of the recurring cycle"
+    ],
+    "test_case_explanations": [
+      "Visible Case 1 — Clean Division:\n  Input: numerator = 1, denominator = 2\n  Output: \"0.5\"\n  Why: 1 divided by 2 is exactly 0.5. No repeating part.",
+      "Visible Case 2 — Whole Number:\n  Input: numerator = 2, denominator = 1\n  Output: \"2\"\n  Why: 2 divided by 1 is 2. No decimal point is needed.",
+      "Visible Case 3 — Standard Repeating:\n  Input: numerator = 4, denominator = 333\n  Output: \"0.(012)\"\n  Why: 4 / 333 is 0.012012012... The sequence '012' repeats indefinitely.",
+      "Visible Case 4 — Offset Repeating:\n  Input: numerator = 1, denominator = 6\n  Output: \"0.1(6)\"\n  Why: 1 / 6 is 0.16666... Only the '6' repeats."
+    ],
+    "sabotage_explanations": [
+      "SABOTAGE CASE 1 — The 32-Bit Overflow Bomb (Hidden Test):\n  Input: numerator = -2147483648, denominator = -1\n  Expected Output: \"2147483648\"\n  Impostor Goal: Crewmates often use `Math.abs()` on the inputs before starting their recursive division. The absolute value of `-2147483648` overflows a standard 32-bit signed integer. If they don't cast to a 64-bit Long FIRST, their code will crash or output negative nonsense.",
+      "SABOTAGE CASE 2 — The Phantom Negative Zero (Hidden Test):\n  Input: numerator = 0, denominator = -5\n  Expected Output: \"0\"\n  Impostor Goal: Crewmates determining the sign using `(numerator < 0) ^ (denominator < 0)` might accidentally prepend a negative sign to a zero result, outputting `\"-0\"` instead of `\"0\"`."
+    ]
+  },
+  "realTestCases": [
+    {
+      "input": "1\n2",
+      "expectedOutput": "0.5",
+      "isHidden": false
+    },
+    {
+      "input": "2\n1",
+      "expectedOutput": "2",
+      "isHidden": false
+    },
+    {
+      "input": "4\n333",
+      "expectedOutput": "0.(012)",
+      "isHidden": false
+    },
+    {
+      "input": "1\n6",
+      "expectedOutput": "0.1(6)",
+      "isHidden": false
+    },
+    {
+      "input": "-2147483648\n-1",
+      "expectedOutput": "2147483648",
+      "isHidden": true
+    },
+    {
+      "input": "0\n-5",
+      "expectedOutput": "0",
+      "isHidden": true
+    },
+    {
+      "input": "-50\n8",
+      "expectedOutput": "-6.25",
+      "isHidden": true
+    },
+    {
+      "input": "1\n17",
+      "expectedOutput": "0.(0588235294117647)",
+      "isHidden": true
+    }
+  ],
+  "sabotageTestCases": [
+    {
+      "name": "The 32-Bit Overflow Bomb",
+      "input": "-2147483648\n-1",
+      "expectedOutput": "2147483648",
+      "explanation": "Tests if the crewmate correctly casts to a 64-bit integer before taking the absolute value. Failing to do so causes an integer overflow when evaluating the 32-bit minimum limit."
+    },
+    {
+      "name": "The Phantom Negative Zero",
+      "input": "0\n-5",
+      "expectedOutput": "0",
+      "explanation": "Tests edge case sign logic. Careless XOR sign evaluation will result in an output of '-0', which is invalid."
+    }
+  ]
+}

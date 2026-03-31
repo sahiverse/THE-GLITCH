@@ -1,0 +1,80 @@
+{
+  "mission_id": "STK_008",
+  "topic": "Stacks & Queues",
+  "title": "The Thermal Uplink",
+  "briefing": {
+    "base_description": "Given an array of integers `temperatures` represents the daily temperatures, return an array `answer` such that `answer[i]` is the number of days you have to wait after the `ith` day to get a warmer temperature. If there is no future day for which this is possible, keep `answer[i] == 0` instead.\n\nExample 1:\nInput: temperatures = [73,74,75,71,69,72,76,73]\nOutput: [1,1,4,2,1,1,0,0]\n\nExample 2:\nInput: temperatures = [30,40,50,60]\nOutput: [1,1,1,0]\n\nExample 3:\nInput: temperatures = [30,60,90]\nOutput: [1,1,0]\n\nConstraints:\n* `1 <= temperatures.length <= 10^5`\n* `30 <= temperatures[i] <= 100`",
+    "imposter_directive": "🔴 IMPOSTOR EYES ONLY — SABOTAGE PROTOCOL 🔴\nYour mission is to silently corrupt the Monotonic Stack logic. You must write code that LOOKS correct but fails on the two sabotage cases below.\n\nStrategy: Crewmates will likely try to use a stack to keep track of unresolved days, but they frequently make two fatal execution errors: (a) <u>The 'If' Trap</u>, where they use a simple `if` statement to check the stack instead of a `while` loop, abandoning older unresolved days, or (b) <u>The Plateau Trap</u>, where they pop days from the stack if the temperature is `>=` rather than strictly `>`. Your job is to exploit these blind spots. Make sure your own submission passes the 4 visible test cases — only the hidden ones should fail.",
+    "constraints": [
+      "1 ≤ temperatures.length ≤ 10^5",
+      "30 ≤ temperatures[i] ≤ 100",
+      "Time complexity MUST be O(N) using a Monotonic Decreasing Stack. Nested loops (O(N^2)) will Time Limit Exceed (TLE)."
+    ],
+    "test_case_explanations": [
+      "Visible Case 1 — Standard Fluctuations:\n  Input: temperatures = [73,74,75,71,69,72,76,73]\n  Output: [1,1,4,2,1,1,0,0]\n  Why: Normal tracking. 75 waits 4 days to see 76.",
+      "Visible Case 2 — Global Warming (Increasing):\n  Input: temperatures = [30,40,50,60]\n  Output: [1,1,1,0]\n  Why: Every day is immediately warmer than the last.",
+      "Visible Case 3 — Ice Age (Decreasing):\n  Input: temperatures = [90,60,30]\n  Output: [0,0,0]\n  Why: No warmer days follow, so all remain 0.",
+      "Visible Case 4 — Single Day:\n  Input: temperatures = [30]\n  Output: [0]\n  Why: Smallest valid input. No future days exist."
+    ],
+    "sabotage_explanations": [
+      "SABOTAGE CASE 1 — The Plateau Mirage (Hidden Test):\n  Input: temperatures = [50,50,50,51]\n  Expected Output: [3,2,1,0]\n  Impostor Goal: Crewmates using `>=` instead of `>` to trigger stack pops will mistakenly consider a day of the *same* temperature as \"warmer\". Their stack will incorrectly collapse early, returning `[1,1,1,0]` or similar wrong outputs. The problem strictly asks for a WARMER temperature.",
+      "SABOTAGE CASE 2 — The Lazy Resolver Trap (Hidden Test):\n  Input: temperatures = [70,60,50,80]\n  Expected Output: [3,2,1,0]\n  Impostor Goal: If a crewmate writes `if (!stack.isEmpty() && temp > stack.peek())` instead of using a `while` loop, the `80` will only resolve the `50`. The `60` and `70` will remain trapped in the stack forever, yielding a corrupted output of `[0,0,1,0]`."
+    ]
+  },
+  "realTestCases": [
+    {
+      "input": "8\n73 74 75 71 69 72 76 73",
+      "expectedOutput": "1 1 4 2 1 1 0 0",
+      "isHidden": false
+    },
+    {
+      "input": "4\n30 40 50 60",
+      "expectedOutput": "1 1 1 0",
+      "isHidden": false
+    },
+    {
+      "input": "3\n90 60 30",
+      "expectedOutput": "0 0 0",
+      "isHidden": false
+    },
+    {
+      "input": "1\n30",
+      "expectedOutput": "0",
+      "isHidden": false
+    },
+    {
+      "input": "4\n50 50 50 51",
+      "expectedOutput": "3 2 1 0",
+      "isHidden": true
+    },
+    {
+      "input": "4\n70 60 50 80",
+      "expectedOutput": "3 2 1 0",
+      "isHidden": true
+    },
+    {
+      "input": "5\n80 70 60 70 80",
+      "expectedOutput": "0 2 1 1 0",
+      "isHidden": true
+    },
+    {
+      "input": "5\n50 40 60 30 70",
+      "expectedOutput": "2 1 2 1 0",
+      "isHidden": true
+    }
+  ],
+  "sabotageTestCases": [
+    {
+      "name": "The Plateau Mirage",
+      "input": "4\n50 50 50 51",
+      "expectedOutput": "3 2 1 0",
+      "explanation": "Tests for strict inequality (`>`). Solutions that pop from the stack on identical temperatures (`>=`) will falsely identify equal days as 'warmer' and fail."
+    },
+    {
+      "name": "The Lazy Resolver Trap",
+      "input": "4\n70 60 50 80",
+      "expectedOutput": "3 2 1 0",
+      "explanation": "Tests for complete stack resolution. Solutions using an `if` statement instead of a `while` loop will only resolve the very top element of the stack, stranding deeper elements that should also be resolved by a massive temperature spike."
+    }
+  ]
+}

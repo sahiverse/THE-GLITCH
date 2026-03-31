@@ -1,0 +1,86 @@
+{
+  "mission_id": "ARR_002",
+  "topic": "Arrays ",
+  "title": "The Frequency Cipher",
+  "briefing": {
+    "base_description": "Given an integer array `nums` and an integer `k`, return the `k` most frequent elements. You may return the answer in any order.\n\nExample 1:\nInput: nums = [1,1,1,2,2,3], k = 2\nOutput: [1,2]\n\nExample 2:\nInput: nums = [1], k = 1\nOutput: [1]\n\nExample 3:\nInput: nums = [1,2,1,2,1,2,3,1,3,2], k = 2\nOutput: [1,2]\n\nConstraints:\n* `1 <= nums.length <= 105`\n* `-104 <= nums[i] <= 104`\n* `k` is in the range `[1, the number of unique elements in the array]`.\n* It is guaranteed that the answer is unique.",
+    "imposter_directive": "🔴 IMPOSTOR EYES ONLY — SABOTAGE PROTOCOL 🔴\nYour mission is to silently corrupt the frequency extraction. You must write code that LOOKS correct but fails on the sabotage cases below.\n\nStrategy: Most crewmates will either (a) use a <u>naive sorting approach that sorts the entire array</u> (inefficient), or (b) use a <u>max-heap and extract k times without proper heap maintenance</u>. Your job is to exploit both weaknesses using the cases provided. Make sure your own submission passes the visible test cases — only the hidden ones should fail.",
+    "constraints": [
+      "1 ≤ nums.length ≤ 10^5",
+      "-10^4 ≤ nums[i] ≤ 10^4",
+      "k is in the range [1, the number of unique elements in the array]",
+      "It is guaranteed that the answer is unique",
+      "Time complexity SHOULD be O(N log k) — ideally using a min-heap of size k"
+    ],
+    "test_case_explanations": [
+      "Visible Case 1 — Basic Frequency:\n  Input:  nums = [1,1,1,2,2,3], k = 2\n  Output: [1,2]\n  Why: Element 1 appears 3 times, element 2 appears 2 times, and element 3 appears 1 time. The 2 most frequent elements are 1 and 2.",
+
+      "Visible Case 2 — Single Element:\n  Input:  nums = [1], k = 1\n  Output: [1]\n  Why: Only one element exists in the array, so return [1]."
+    ],
+    "sabotage_explanations": [
+      "SABOTAGE CASE 1 — The Division Trap (Hidden Test):\n  Input:  nums = [4,1,1,1,2,2,3], k = 2\n  Expected Output: [1,2]\n  Impostor Goal: Crewmates using unstable sorting or incorrect frequency tracking might return wrong elements. The heap must properly maintain the k most frequent elements without skipping or misidentifying them.",
+
+      "SABOTAGE CASE 2 — Negative Numbers Edge Case (Hidden Test):\n  Input:  nums = [-1,-1,-1,0,0,1,1,1,1], k = 2\n  Expected Output: [1,-1] or [-1,1]\n  Impostor Goal: Careless implementations might fail when handling negative numbers in frequency maps or heap comparisons. The solution must correctly handle negative integers without bias.",
+
+      "SABOTAGE CASE 3 — Large Array with Few Distinct Elements (Hidden Test):\n  Input:  nums = [1]*5000 + [2]*3000 + [3]*2000, k = 2\n  Expected Output: [1,2]\n  Impostor Goal: A naive O(N log N) sorting approach will TLE on large arrays. Only optimized min-heap solutions of size k will pass within time limits.",
+
+      "SABOTAGE CASE 4 — Large K with All Unique Elements (Hidden Test):\n  Input:  nums = [1,2,3,4,5,6,7,8,9,10], k = 5\n  Expected Output: [1,2,3,4,5] (or any 5 elements, since all have frequency 1)\n  Impostor Goal: The solution must correctly identify k elements when multiple elements share the same frequency. Heap management is critical here."
+    ]
+  },
+  "realTestCases": [
+    {
+      "input": "6\n1 1 1 2 2 3\n2",
+      "expectedOutput": "1 2",
+      "isHidden": false
+    },
+    {
+      "input": "1\n1\n1",
+      "expectedOutput": "1",
+      "isHidden": false
+    },
+    {
+      "input": "10\n1 2 1 2 1 2 3 1 3 2\n2",
+      "expectedOutput": "1 2",
+      "isHidden": false
+    },
+    {
+      "input": "7\n4 1 1 1 2 2 3\n2",
+      "expectedOutput": "1 2",
+      "isHidden": false
+    },
+    {
+      "input": "9\n-1 -1 -1 0 0 1 1 1 1\n2",
+      "expectedOutput": "1 -1",
+      "isHidden": true
+    },
+    {
+      "input": "10000\n1 1 1 1 1 1 1 1 1 1 2 2 2 2 2 2 2 2 2 2 3 3 3 3 3 3 3 3 3 3\n2",
+      "expectedOutput": "1 2",
+      "isHidden": true
+    },
+    {
+      "input": "10\n1 2 3 4 5 6 7 8 9 10\n5",
+      "expectedOutput": "1 2 3 4 5",
+      "isHidden": true
+    },
+    {
+      "input": "8\n-5 -5 10 10 20 20 30 40\n3",
+      "expectedOutput": "-5 10 20",
+      "isHidden": true
+    }
+  ],
+  "sabotageTestCases": [
+    {
+      "name": "The Division Trap",
+      "input": "7\n4 1 1 1 2 2 3\n2",
+      "expectedOutput": "1 2",
+      "explanation": "Crewmates using unstable sorting or incorrect frequency tracking will fail. The heap must properly maintain the k most frequent elements without skipping or misidentifying them."
+    },
+    {
+      "name": "The TLE Bomb",
+      "input": "10000\n1 1 1 1 1 1 1 1 1 1 2 2 2 2 2 2 2 2 2 2 3 3 3 3 3 3 3 3 3 3\n2",
+      "expectedOutput": "1 2",
+      "explanation": "Any solution using O(N log N) sorting on the entire array will TLE on large inputs. Only optimized min-heap solutions of size k will pass within time limits. O(N²) nested loop approaches will freeze."
+    }
+  ]
+}
