@@ -95,13 +95,13 @@
         html, body, div, span, p, h1, h2, h3, h4, h5, h6, 
         button, a, input, select, textarea, [role="button"], 
         .retro-button, *:hover, *:active, *:focus {
-            cursor: url('/robo-hand.cur'), url('/robo-hand.png'), auto !important;
+            cursor: url('/robo-hand.cur'), auto !important;
         }
         
         /* Ensure interactive elements use pointer cursor */
         button, a, input, select, textarea, [role="button"], 
         .retro-button, [onclick], [role="button"]:hover {
-            cursor: url('/robo-hand.cur'), url('/robo-hand.png'), pointer !important;
+            cursor: url('/robo-hand.cur'), pointer !important;
         }
 
         ::-webkit-scrollbar {
@@ -177,17 +177,17 @@
   }
 }
 </script>
-<link rel="stylesheet" href="/index.css">
+<script type="module" src="/index.tsx"></script>
 </head>
-<body class="font-sans" style="cursor: url('/robo-hand.cur'), url('/robo-hand.png'), auto !important;">
+<body class="font-sans" style="cursor: url('/robo-hand.cur'), auto !important;">
     <div id="root" class="flex flex-col h-full w-full relative z-10"></div>
     <div id="main-mario-ground" class="mario-ground"></div>
     
     <script>
         // Force robot cursor on all elements
         function forceRobotCursor() {
-            const cursorStyle = 'url("/robo-hand.cur"), url("/robo-hand.png"), auto';
-            const pointerStyle = 'url("/robo-hand.cur"), url("/robo-hand.png"), pointer';
+            const cursorStyle = 'url("/robo-hand.cur"), auto';
+            const pointerStyle = 'url("/robo-hand.cur"), pointer';
             
             // Apply to all elements
             document.querySelectorAll('*').forEach(el => {
