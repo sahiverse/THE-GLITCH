@@ -2,16 +2,13 @@
 
 A **real-time multiplayer** social deduction game where developers write code together while one player secretly sabotages the solution. Built with **Socket.io**, **Redis**, and **Judge0** for live collaboration and secure code execution.
 
-**Live Demo:** [https://the-glitch.vercel.app](https://the-glitch.vercel.app)  
-**Repository:** [https://github.com/sahiverse/THE-GLITCH](https://github.com/sahiverse/THE-GLITCH)
-
 ---
 
 ## **What It Does**
 
-- **5 players** join a room and collaborate on a coding challenge
+- **3-5 players** join a room and collaborate on a coding challenge
 - **1 Imposter** sees secret "sabotage" test cases and tries to make the code fail them
-- **4 Civilians** see real test cases and try to write correct code
+- **2-4 Civilians** see real test cases and try to write correct code
 - **Real-time code editor** with live cursors showing where everyone is typing
 - **Emergency meetings** with chat to vote out suspected imposters
 - **Automated code execution** via Judge0 to determine who wins
@@ -20,28 +17,7 @@ A **real-time multiplayer** social deduction game where developers write code to
 
 ## **System Architecture**
 
-**View Interactive Architecture:** Open `TheGlitch_finalARC.html` in your browser to see the full interactive system diagram.
-
-```
-┌─────────────────┐         WSS/HTTPS         ┌─────────────────┐
-│    FRONTEND     │  ◄─────────────────────►  │    BACKEND      │
-│   (Vercel)      │                         │   (Node.js)     │
-│                 │                         │                 │
-│  • React 18     │                         │  • Express      │
-│  • TypeScript   │                         │  • Socket.io    │
-│  • Monaco       │                         │  • Redis Client │
-│    Editor       │                         │                 │
-│  • TailwindCSS  │                         │                 │
-└─────────────────┘                         └────────┬────────┘
-                                                      │
-                           ┌─────────────────────────┼─────────────────────────┐
-                           │                         │                         │
-                           ▼                         ▼                         ▼
-                    ┌─────────────┐          ┌─────────────┐          ┌─────────────┐
-                    │Redis Cloud  │          │Judge0       │          │   WebSocket │
-                    │(Game State) │          │(Code Exec)  │          │   Events    │
-                    └─────────────┘          └─────────────┘          └─────────────┘
-```
+<img width="1238" height="799" alt="TheGlitch_final ARCH" src="https://github.com/user-attachments/assets/64d0c7f6-dad8-4f3b-887a-27fa172f2f03" />
 
 ---
 
@@ -186,18 +162,6 @@ npm run dev
 # Terminal 2: Start frontend
 npm run dev
 ```
-
-### **Environment Variables**
-```env
-# Backend .env
-PORT=3000
-REDIS_URL=redis://your-redis-url:6379
-JUDGE0_URL=http://your-judge0-instance:2358
-
-# Frontend .env
-VITE_API_URL=http://localhost:3000
-```
-
 ---
 
 ## **👨‍💻 Developer Notes**
@@ -242,6 +206,3 @@ MIT License - Built for educational and competitive gaming purposes.
 
 ---
 
-**Built with ❤️ and a lot of ☕ by developers, for developers.**
-
-*Ready to find the glitch in your code?* 🎮
