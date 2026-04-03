@@ -46,7 +46,7 @@ async function initGame(code, io) {
     room.topic = null;
     
     // Step 4: Initialize Phase 5 meeting fields
-    room.meetingsLeft = updatedPlayers.length <= 4 ? 2 : 3;
+    room.meetingsLeft = updatedPlayers.length <= 4 ? 2 : 4;
     room.currentMeetingVotes = {};
     room.activeMeeting = false;
     room.meetingCaller = null;

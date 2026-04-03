@@ -5,6 +5,20 @@ import ImposterWin from './ImposterWin';
 import CivilianDied from './CivilianDied';
 import { ChatPanel } from './ChatPanel';
 
+/**
+ * EmergencyMeeting Component
+ * 
+ * Handles the voting phase of the game where players debate and vote
+ * on who they suspect is the imposter. Manages multiple outcome states:
+ * - Active voting with real-time vote counts
+ * - Tie/no-elimination results
+ * - Civilian elimination (with remaining player check)
+ * - Imposter elimination (civilian victory)
+ * - Game over win screens
+ * 
+ * Integrates with ChatPanel for discussion during meetings.
+ */
+
 interface PlayerObject {
   id: string
   name: string
@@ -48,6 +62,10 @@ const EmergencyMeeting: React.FC<EmergencyMeetingProps> = ({
   
   const onMeetingEndRef = useRef(onMeetingEnd)
   
+  /**
+   * Keep callback ref in sync with latest props.
+   * Prevents stale closure issues in socket event handlers.
+   */
   useEffect(() => {
     onMeetingEndRef.current = onMeetingEnd
   }, [onMeetingEnd])
@@ -61,17 +79,27 @@ const EmergencyMeeting: React.FC<EmergencyMeetingProps> = ({
     }
 
     const handleVoteError = (data: any) => {
-      console.log('Vote error:', data.error)
-      // If vote failed, allow voting again
+      // If vote failed server-side, allow re-voting
       if (data.error.includes('Cannot vote') || data.error.includes('already voted')) {
         setHasVoted(false)
       }
     }
 
+    /**
+     * Handle meeting results and route to appropriate screen.
+     * 
+     * Routing priority:
+     * 1. Game over check (win/loss conditions)
+     * 2. Tie or skip → Brief results, return to game
+     * 3. Imposter eliminated → Civilian win
+     * 4. Civilian eliminated + no civilians left → Imposter win
+     * 5. Civilian eliminated + civilians remain → Death screen, return to game
+     */
     const handleMeetingResult = (data: any) => {
       const outcome = data.outcome
 
-      // ✅ FIX: Check game over FIRST, before any type-based routing
+      // Priority 1: Check for game-ending conditions before processing
+      // other outcome types. Game over takes precedence over all UI states.
       if (outcome.gameOver) {
         if (outcome.winner === 'imposter') {
           const imposterPlayer = players.find(p => p.id === data.imposterId)
@@ -87,8 +115,9 @@ const EmergencyMeeting: React.FC<EmergencyMeetingProps> = ({
         }
       }
 
-      // CASE 1: Tie or skip → show results briefly then return to game
-      // (only reached when gameOver is false)
+      // Outcome routing hierarchy (only evaluated if gameOver is false):
+      // 
+      // 1. Tie/no-elimination → Brief results display, return to game
       if (outcome.type === 'tie') {
         setMeetingResult(outcome)
         setShowScreen('results')
@@ -98,7 +127,7 @@ const EmergencyMeeting: React.FC<EmergencyMeetingProps> = ({
         return
       }
 
-      // CASE 5A: Imposter eliminated → go directly to CivilianWin
+      // 2. Imposter eliminated → Civilians win
       if (outcome.type === 'eliminated' && data.eliminatedPlayerRole === 'imposter') {
         const imposterPlayerName = data.eliminatedPlayerName || 'UNKNOWN'
         setImposterName(imposterPlayerName)
@@ -107,31 +136,18 @@ const EmergencyMeeting: React.FC<EmergencyMeetingProps> = ({
         return
       }
 
-      // CASE 5B: Civilian eliminated → go directly to CivilianDied for ALL
+      // 3. Civilian eliminated → Check if imposter wins by elimination
       if (outcome.type === 'eliminated' && data.eliminatedPlayerRole === 'civilian') {
-        // CASE 6 check: if no civilians remain → ImposterWin instead
+        // If no civilians remain → ImposterWin instead
         if (data.remainingCivilians === 0) {
           const imposterPlayer = players.find(p => p.id === data.imposterId)
           setImposterName(imposterPlayer?.name || 'UNKNOWN')
           setShowScreen('imposter-win')
-          // Don't auto-close meeting - PLAY AGAIN button handles navigation
           return
         }
         // Civilians still remain → show CivilianDied, then return to game
         setEliminatedPlayerName(data.eliminatedPlayerName || 'UNKNOWN')
         setShowScreen('civilian-died')
-        return
-      }
-
-      // CASE 6: Server-declared imposter win (survived all rounds)
-      if (outcome.winner === 'imposter') {
-        const imposterPlayer = players.find(p => p.id === data.imposterId)
-        setImposterName(imposterPlayer?.name || 'UNKNOWN')
-        setShowScreen('imposter-win')
-        // Close the meeting component after showing win screen
-        setTimeout(() => {
-          onMeetingEndRef.current()
-        }, 5000) // Give time for win screen to be seen
         return
       }
 
@@ -154,10 +170,11 @@ const EmergencyMeeting: React.FC<EmergencyMeetingProps> = ({
       }
     }
 
-    // Handle a NEW meeting being called while this component is still showing
-    // (e.g., player is on CivilianDied screen and someone calls another meeting)
+    /**
+     * Handle edge case: new meeting triggered while results screen visible.
+     * Resets component state to prepare for the new vote.
+     */
     const handleNewMeeting = (data: any) => {
-      console.log('🚨 EmergencyMeeting: New meeting started while showing results, resetting to voting')
       setHasVoted(false)
       setVotedCount(0)
       setTotalVoters(0)

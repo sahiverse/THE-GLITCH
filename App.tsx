@@ -1,3 +1,21 @@
+/**
+ * THE GLITCH - Main Application Component
+ * 
+ * Orchestrates the entire game flow from home screen through game completion.
+ * Manages Socket.io connection, game state transitions, and coordinates
+ * between various game phases:
+ * 
+ * 1. Home - Create or join game
+ * 2. Name Entry - Player and room configuration  
+ * 3. Room Lobby - Waiting for players
+ * 4. Topic Selection - Voting on coding domain
+ * 5. Role Reveal - Imposter/Civilian assignment
+ * 6. Game - Collaborative coding phase
+ * 7. Game Over - Win/loss display
+ * 
+ * @module App
+ */
+
 import React, { useState, useEffect, useRef } from 'react';
 import { io } from 'socket.io-client';
 import RetroButton from './components/RetroButton';
@@ -34,10 +52,7 @@ const App: React.FC = () => {
   const [yourPlayer, setYourPlayer] = useState<any>(null);
   const [error, setError] = useState<string>('');
   
-  
-  
-  
-  // Keep refs in sync with state
+  /** Mirror state values in refs to avoid stale closures in socket event handlers. */
   useEffect(() => {
     gameStateRef.current = gameState;
   }, [gameState]);
@@ -54,26 +69,33 @@ const App: React.FC = () => {
   const [question, setQuestion] = useState<string>('');
   const [imposterQuestion, setImposterQuestion] = useState<string>('');
   const [testCases, setTestCases] = useState<any[]>([]);
-const [civilianTestCases, setCivilianTestCases] = useState<any[]>([]);
+  const [civilianTestCases, setCivilianTestCases] = useState<any[]>([]);
 
   // Phase 6 state variables (round system)
   const [currentRound, setCurrentRound] = useState<number>(0);
   const [totalRounds, setTotalRounds] = useState<number>(2);
   const [timeLeft, setTimeLeft] = useState<number>(420);
 
-  // Initialize socket connection
+  /**
+   * Initialize Socket.io connection and wire up all game event handlers.
+   * 
+   * Event handlers update React state based on server broadcasts:
+   * - Player joins/leaves/ready updates
+   * - Game state transitions (topic selection, role assignment, game start)
+   * - Emergency meetings and voting
+   * - Round timer updates
+   * 
+   * Socket is established once on mount and cleaned up on unmount.
+   */
   useEffect(() => {
     const newSocket = io(API_URL);
     
     newSocket.on('connect', () => {
-      console.log('Connected to server:', newSocket.id);
       setSocketId(newSocket.id);
       setSocket(newSocket);
     });
 
     newSocket.on('room_joined', (data) => {
-      console.log('Room joined:', data);
-      console.log('🎨 Players with colors:', data.room.players.map(p => ({ name: p.name, color: p.color })));
       setRoomData(data.room);
       setYourPlayer(data.yourPlayer);
       setInviteCode(data.room.code);
@@ -84,7 +106,6 @@ const [civilianTestCases, setCivilianTestCases] = useState<any[]>([]);
     });
 
     newSocket.on('player_joined', (data) => {
-      console.log('👤 Player joined:', data.player?.name, 'color:', data.player?.color);
       setRoomData((prev: any) => {
         if (!prev) return prev
         // Check if player already exists to avoid duplicates
@@ -107,18 +128,12 @@ const [civilianTestCases, setCivilianTestCases] = useState<any[]>([]);
     });
 
     newSocket.on('ready_update', (data) => {
-      console.log('👍 Ready update event received:', data);
-      console.log('🏠 Current roomData before update:', roomData);
-      console.log('👤 Current yourPlayer:', yourPlayer);
-      
       if (roomData) {
         setRoomData(prev => {
-          console.log('📝 Updating roomData players from:', prev?.players?.map(p => ({name: p.name, isReady: p.isReady})));
           const newRoomData = {
             ...prev,
             players: data.players
           };
-          console.log('📝 Updated roomData players to:', newRoomData.players?.map(p => ({name: p.name, isReady: p.isReady})));
           return newRoomData;
         });
         
@@ -126,13 +141,11 @@ const [civilianTestCases, setCivilianTestCases] = useState<any[]>([]);
         if (yourPlayer) {
           const updatedYourPlayer = data.players.find(p => p.id === yourPlayer.id);
           if (updatedYourPlayer) {
-            console.log('🔄 Updating yourPlayer ready state from', yourPlayer.isReady, 'to', updatedYourPlayer.isReady);
             setYourPlayer(updatedYourPlayer);
           }
         }
       } else {
         // Handle case where roomData is null - set it from event data
-        console.log('📝 Using ready_update data to set roomData (roomData was null)');
         setRoomData({
           code: inviteCode,
           roomName: roomName,
@@ -144,7 +157,6 @@ const [civilianTestCases, setCivilianTestCases] = useState<any[]>([]);
         if (yourPlayer) {
           const updatedYourPlayer = data.players.find(p => p.id === yourPlayer.id);
           if (updatedYourPlayer) {
-            console.log('🔄 Updating yourPlayer ready state from', yourPlayer.isReady, 'to', updatedYourPlayer.isReady);
             setYourPlayer(updatedYourPlayer);
           }
         }
@@ -152,30 +164,22 @@ const [civilianTestCases, setCivilianTestCases] = useState<any[]>([]);
     });
 
     newSocket.on('player_left', (data) => {
-      console.log('👋 Player left event received:', data);
-      console.log('🏠 Current roomData before update:', roomData);
-      console.log('👤 Current yourPlayer:', yourPlayer);
-      
       // Always update roomData if available in the event
       if (data.room) {
-        console.log('📝 Using room data from event:', data.room.players?.map(p => p.name));
         setRoomData(data.room);
         
         // Update yourPlayer if still in room
         if (yourPlayer) {
           const updatedYourPlayer = data.room.players.find(p => p.id === yourPlayer.id);
           if (updatedYourPlayer) {
-            console.log('🔄 Updating yourPlayer to:', updatedYourPlayer);
             setYourPlayer(updatedYourPlayer);
           } else {
             // You were removed from room
-            console.log('❌ You were removed from room, clearing yourPlayer');
             setYourPlayer(null);
           }
         }
       } else if (data.players && roomData) {
         // Use players array from event when room object is not available
-        console.log('📝 Using players array from event:', data.players.map(p => p.name));
         setRoomData(prev => ({
           ...prev,
           players: data.players
@@ -185,45 +189,34 @@ const [civilianTestCases, setCivilianTestCases] = useState<any[]>([]);
         if (yourPlayer) {
           const updatedYourPlayer = data.players.find(p => p.id === yourPlayer.id);
           if (updatedYourPlayer) {
-            console.log('🔄 Updating yourPlayer to:', updatedYourPlayer);
             setYourPlayer(updatedYourPlayer);
           } else {
             // You were removed from room
-            console.log('❌ You were removed from room, clearing yourPlayer');
             setYourPlayer(null);
           }
         }
       } else if (roomData) {
         // Fallback to original logic
-        setRoomData(prev => {
-          console.log('📝 Updating roomData from:', prev?.players?.map(p => p.name));
-          const newRoomData = {
-            ...prev,
-            players: data.players
-          };
-          console.log('📝 Updated roomData to:', newRoomData.players?.map(p => p.name));
-          return newRoomData;
-        });
+        setRoomData(prev => ({
+          ...prev,
+          players: data.players
+        }));
         
         // If you were the one who left, clear yourPlayer
         if (data.playerId === socket.id) {
-          console.log('🚪 You left the room, clearing yourPlayer');
           setYourPlayer(null);
         } else if (yourPlayer) {
           // Update yourPlayer data if still in room
           const updatedYourPlayer = data.players.find(p => p.id === yourPlayer.id);
           if (updatedYourPlayer) {
-            console.log('🔄 Updating yourPlayer to:', updatedYourPlayer);
             setYourPlayer(updatedYourPlayer);
           } else {
             // You were removed from room (host left and room was deleted)
-            console.log('❌ You were removed from room, clearing yourPlayer');
             setYourPlayer(null);
           }
         }
       } else if (data.players) {
         // Handle case where roomData is null but players array is available
-        console.log('📝 Using players array from event (roomData null):', data.players.map(p => p.name));
         setRoomData({
           code: inviteCode,
           roomName: roomName,
@@ -235,47 +228,38 @@ const [civilianTestCases, setCivilianTestCases] = useState<any[]>([]);
         if (yourPlayer) {
           const updatedYourPlayer = data.players.find(p => p.id === yourPlayer.id);
           if (updatedYourPlayer) {
-            console.log('🔄 Updating yourPlayer to:', updatedYourPlayer);
             setYourPlayer(updatedYourPlayer);
           } else {
             // You were removed from room
-            console.log('❌ You were removed from room, clearing yourPlayer');
             setYourPlayer(null);
           }
         }
-      } else {
-        console.log('❌ No roomData available and no players array in event');
       }
     });
 
     newSocket.on('game_start', (data) => {
-      console.log('Game starting:', data);
       // Note: Frontend now waits for role_assigned before showing topic selection
     });
 
     // Phase 2: Role Assignment
     newSocket.on('role_assigned', (data) => {
-      console.log('🎭 Role assigned:', data.role);
       setPlayerRole(data.role);
       // Do NOT change gameState here — role reveal happens after topic is selected
     });
 
     // Phase 2: Topic Selection Start
     newSocket.on('topic_selection_start', (data) => {
-      console.log('📊 Topic selection started:', data);
       setAvailableTopics(data.topics);
       setGameState('selecting-topic');
     });
 
     // Phase 2: Live Vote Updates
     newSocket.on('live_vote_update', (data) => {
-      console.log('📊 Live vote update:', data);
       setVoteData(data);
     });
 
     // Phase 2: Topic Selected
     newSocket.on('topic_selected', (data) => {
-      console.log('🏆 Topic selected:', data.topic);
       setSelectedTopic(data.topic);
       setWinningTopic(data.topic);
       // Show winning topic briefly then go to role reveal
@@ -286,7 +270,6 @@ const [civilianTestCases, setCivilianTestCases] = useState<any[]>([]);
 
     // Phase 2: Game Data
     newSocket.on('game_data', (data) => {
-      console.log('📦 Game data received:', data);
       // Parse briefing object into role-specific mission brief strings
       const briefing = data.question?.base_description ? data.question : (data.question || {});
       
@@ -323,17 +306,14 @@ const [civilianTestCases, setCivilianTestCases] = useState<any[]>([]);
 
     // Phase 2: Game Ready
     newSocket.on('game_ready', (data) => {
-      console.log('🎮 Game ready:', data);
       // This is a backup signal if game_data was missed
     });
 
     // Phase 2: Vote Error
     newSocket.on('vote_error', (data) => {
-      console.error('❌ Vote error:', data);
       setError(data.error || 'Voting error occurred');
     });
     newSocket.on('alive_count_update', (data) => {
-      console.log('📊 Alive count update:', data);
       // Update room data with new alive count
       setRoomData(prev => prev ? {
         ...prev,
@@ -343,17 +323,14 @@ const [civilianTestCases, setCivilianTestCases] = useState<any[]>([]);
     });
 
     newSocket.on('room_error', (data) => {
-      console.error('Room error:', data);
       setError(data.error);
     });
 
     newSocket.on('disconnect', () => {
-      console.log('Disconnected from server');
     });
 
     // Meeting updates
     newSocket.on('meeting_started', (data) => {
-      console.log('🚨 App.tsx received meeting_started:', data);
       setMeetingsLeft(data.meetingsLeft);
       // Store meeting data and force-navigate to game room
       setPendingMeeting({
@@ -365,17 +342,13 @@ const [civilianTestCases, setCivilianTestCases] = useState<any[]>([]);
     });
 
     newSocket.on('meeting_result', (data) => {
-      console.log('📋 Meeting result received in App.tsx:', data.outcome?.type)
-      
       // Clear pending meeting
       setPendingMeeting(null);
       
-      // ✅ FIX: If this was a forced meeting, reset timer and increment round
+      // If this was a forced meeting, reset timer and increment round
       if (data.isForced) {
-        console.log('🔄 Forced meeting ended — resetting timer to 60 and incrementing round');
         setTimeLeft(420); // Reset to 7:00 (420 seconds)
         setCurrentRound(data.nextRound || currentRound + 1); // Increment to next round
-        console.log(`📊 New state: Round ${data.nextRound || currentRound + 1}, Time: 1:00`);
       }
       
       // Update meetingsLeft
@@ -399,10 +372,6 @@ const [civilianTestCases, setCivilianTestCases] = useState<any[]>([]);
 
     // Game Over handler
     newSocket.on('game_over', (data) => {
-      console.log('🎮 Game over signal received:', data);
-      console.log('🏆 Winner:', data.winner);
-      console.log('📝 Message:', data.message);
-      
       // Store imposter ID for win screen display
       if (data.imposterId) {
         setGameOverImposterId(data.imposterId);
@@ -421,7 +390,6 @@ const [civilianTestCases, setCivilianTestCases] = useState<any[]>([]);
 
     // Phase 6: Round System
     newSocket.on('round_started', (data) => {
-      console.log('🎯 round_started received:', data);
       setCurrentRound(data.round);
       setTimeLeft(data.timeLeft);
       if (data.totalRounds !== undefined) {
@@ -434,7 +402,6 @@ const [civilianTestCases, setCivilianTestCases] = useState<any[]>([]);
     });
 
     newSocket.on('timer_tick', (data) => {
-      console.log('⏰ timer_tick received:', data);
       setTimeLeft(data.timeLeft);
       setCurrentRound(data.round);
     });
@@ -447,18 +414,15 @@ const [civilianTestCases, setCivilianTestCases] = useState<any[]>([]);
     });
 
     newSocket.on('round_ending', (data) => {
-      console.log('🔄 Round ending:', data);
       // Do NOT update currentRound here — wait for round_started
       // which fires 3 seconds later with the authoritative value
     });
 
     newSocket.on('room_error', (data) => {
-      console.error('Room error:', data);
       setError(data.error);
     });
 
     newSocket.on('disconnect', () => {
-      console.log('Disconnected from server');
     });
 
     return () => {
@@ -471,7 +435,6 @@ const [civilianTestCases, setCivilianTestCases] = useState<any[]>([]);
     if (!socket) return;
     
     const handleLanguageChanged = (data) => {
-      console.log('🔤 App.tsx received language_changed:', data);
       setSelectedLanguage(data.language);
     };
     
@@ -490,29 +453,16 @@ const [civilianTestCases, setCivilianTestCases] = useState<any[]>([]);
   const handleJoinRequest = async () => {
     if (!inviteCode.trim()) return;
     
-    console.log('🔍 Joining room with code:', inviteCode);
-    
     try {
       const response = await fetch(`${API_URL}/room/${inviteCode}/exists`);
       const data = await response.json();
       
-      console.log('📋 Room check response:', data);
-      console.log('🎮 Game state check:', {
-        gameState: data.gameState,
-        topic: data.topic,
-        isRestricted: data.gameState === 'in-game' || 
-                     data.gameState === 'meeting' || 
-                     (data.topic && data.gameState !== 'lobby')
-      });
-      
       if (!data.exists) {
-        console.log('❌ Room not found');
         setError('Room not found');
         return;
       }
       
       if (data.currentPlayers >= data.maxPlayers) {
-        console.log('❌ Room full');
         setError('Room is full');
         return;
       }
@@ -522,24 +472,15 @@ const [civilianTestCases, setCivilianTestCases] = useState<any[]>([]);
                            data.gameState === 'meeting' || 
                            (data.topic && data.gameState !== 'lobby');
       
-      console.log('🚫 Restriction check:', {
-        gameState: data.gameState,
-        topic: data.topic,
-        isRestricted: isRestricted
-      });
-      
       if (isRestricted) {
-        console.log('❌ Room is live - blocking join');
         setError('cant join room is live');
         return;
       }
       
-      console.log('✅ Room validation passed');
       setPendingAction('join');
       setGameState('entering-name');
       setError('');
     } catch (err) {
-      console.error('❌ Join request error:', err);
       setError('Failed to check room');
     }
   };
@@ -586,7 +527,6 @@ const [civilianTestCases, setCivilianTestCases] = useState<any[]>([]);
         setMaxPlayers(result.maxPlayers);
         
         // Join socket room so others can join
-        console.log('🏠 Host joining socket room:', result.code);
         socket?.emit('join_room', {
           code: result.code,
           nickname: playerName
@@ -635,7 +575,6 @@ const [civilianTestCases, setCivilianTestCases] = useState<any[]>([]);
   };
 
   const handleGameOver = React.useCallback((data: any) => {
-    console.log('🎮 Game over signal received (handled by EmergencyMeeting):', data);
   }, []);
 
   const handleBackToHome = () => {
@@ -889,7 +828,6 @@ const [civilianTestCases, setCivilianTestCases] = useState<any[]>([]);
 
         {gameState === 'game-over' && (
           <>
-            {console.log('🏆 Showing win screen, role:', playerRole)}
             {playerRole === 'imposter' ? (
               <ImposterWin 
                 imposterName={
@@ -914,7 +852,6 @@ const [civilianTestCases, setCivilianTestCases] = useState<any[]>([]);
 
         {gameState === 'game' && (
     <>
-      {console.log('🎮 Routing to game room, role:', playerRole)}
       {playerRole === 'imposter' ? (
         <ImposterGameRoom
           category={'SOURCE'}

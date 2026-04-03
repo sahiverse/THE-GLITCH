@@ -17,21 +17,35 @@ interface UseChatProps {
   isVotedOut: boolean;
 }
 
+/**
+ * Hook for real-time chat functionality
+ * 
+ * Manages message state and communication with backend chat handlers.
+ * Messages are ephemeral (not persisted) as game rooms are temporary.
+ * 
+ * @param socket - Socket.io connection
+ * @param roomCode - Current game room identifier  
+ * @param socketId - This player's socket ID
+ * @param isVotedOut - Whether player has been voted out (prevents sending)
+ */
 export const useChat = ({ socket, roomCode, socketId, isVotedOut }: UseChatProps) => {
   const [messages, setMessages] = useState<MessageObject[]>([]);
   const [error, setError] = useState<string>('');
   
-  // Listen for new messages
+  /**
+   * Subscribe to chat events from Socket.io.
+   * 
+   * Appends new messages to local state; messages are stored
+   * ephemerally (no persistence) as game rooms are temporary.
+   */
   useEffect(() => {
     if (!socket) return;
     
     const handleNewMessage = (data: MessageObject) => {
-      console.log('💬 New message received:', data);
       setMessages(prev => [...prev, data]);
     };
     
     const handleChatError = (data: { error: string }) => {
-      console.error('❌ Chat error:', data);
       setError(data.error);
       
       // Clear error after 3 seconds
@@ -47,7 +61,15 @@ export const useChat = ({ socket, roomCode, socketId, isVotedOut }: UseChatProps
     };
   }, [socket]);
   
-  // Send message function
+  /**
+   * Send a chat message to the server.
+   * 
+   * Client-side validation:
+   * - Message must be non-empty after trimming
+   * - Message length capped at 200 characters
+   * 
+   * Server enforces additional validation (game state, room membership).
+   */
   const sendMessage = useCallback((message: string) => {
     if (!socket || !roomCode) return;
     
@@ -66,8 +88,6 @@ export const useChat = ({ socket, roomCode, socketId, isVotedOut }: UseChatProps
       roomCode,
       message: trimmedMessage
     });
-    
-    console.log('💬 Sending message:', trimmedMessage);
   }, [socket, roomCode]);
   
   return {

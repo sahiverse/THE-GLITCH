@@ -1,16 +1,32 @@
 /**
- * Chat Phase Socket Handlers
- * Handles real-time chat messaging during game and meetings
+ * Chat Socket Handlers
+ * 
+ * Handles real-time messaging during game sessions and emergency meetings.
+ * Validates game state, player permissions, and message content before broadcast.
+ * 
+ * Security: Room code is derived from socket session (stored in Redis) rather than
+ * trusting the client payload, preventing message spoofing across rooms.
  */
 
 const RoomManager = require('../rooms/roomManager');
 
 /**
- * Register chat phase socket handlers
+ * Register chat-related socket event handlers
+ * @param {Socket} socket - Socket.io socket instance
+ * @param {Server} io - Socket.io server instance
  */
 function registerChatHandlers(socket, io) {
   
-  // Handle message sending
+  /**
+   * Handle incoming chat messages from players
+   * 
+   * Validation:
+   * - Message must be non-empty and under 200 characters
+   * - Player must be in an active game room
+   * - Game state must be 'in-game' or 'meeting'
+   * 
+   * Broadcasts validated message to all players in room including sender.
+   */
   socket.on('send_message', async (data) => {
     try {
       const { message } = data;
@@ -21,13 +37,17 @@ function registerChatHandlers(socket, io) {
         return;
       }
       
-      // Validate message length
+      // Validate message length (prevent spam/abuse)
       if (message.trim().length > 200) {
         socket.emit('chat_error', { error: 'Message too long' });
         return;
       }
       
-      // Get room code from socket (security - don't trust payload)
+      /**
+       * Security: Derive room from socket session, not client payload.
+       * Prevents spoofed messages by validating socket.id -> room mapping
+       * stored in Redis during room join handshake.
+       */
       const roomCode = await RoomManager.getPlayerRoom(socket.id);
       if (!roomCode) {
         socket.emit('chat_error', { error: 'Room not found' });
@@ -41,7 +61,7 @@ function registerChatHandlers(socket, io) {
         return;
       }
       
-      // Validate game state
+      // Validate game state - chat only available during active play or meetings
       if (room.gameState !== 'in-game' && room.gameState !== 'meeting') {
         socket.emit('chat_error', { error: 'Chat not available' });
         return;
@@ -53,7 +73,7 @@ function registerChatHandlers(socket, io) {
         return; // Silent fail if player not found
       }
       
-      // Build message object
+      // Build message object with metadata for display
       const messageObject = {
         id: Date.now().toString() + Math.random().toString(36).substring(2, 6),
         playerId: socket.id,
@@ -70,7 +90,7 @@ function registerChatHandlers(socket, io) {
       console.log(`💬 Message sent in room ${roomCode} by ${player.name}: ${messageObject.message.substring(0, 50)}...`);
       
     } catch (error) {
-      console.error('❌ Error handling send_message:', error);
+      console.error('Error handling send_message:', error);
       socket.emit('chat_error', { error: 'Failed to send message' });
     }
   });

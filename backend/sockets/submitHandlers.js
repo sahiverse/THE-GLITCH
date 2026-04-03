@@ -4,9 +4,13 @@ const { runAllTestCases } = require('../judge0/judge0Service');
 
 function registerSubmitHandlers(socket, io) {
 
-  // ─── RUN ─────────────────────────────────────────────────────────────────
-  // Private — only the player who clicked RUN sees output
-  // No win/lose check
+  /**
+   * RUN handler: Private code execution for testing.
+   * 
+   * Unlike submit, this only returns results to the requesting player.
+   * Used for iterative development without affecting game state.
+   * Runs both real and sabotage test cases to give imposters full visibility.
+   */
   socket.on('run_code', async (data) => {
     try {
       const { language } = data;
@@ -94,9 +98,13 @@ function registerSubmitHandlers(socket, io) {
   });
 
 
-  // ─── SUBMIT ──────────────────────────────────────────────────────────────
-  // Public — all players see submission result
-  // Win/lose check happens here
+  /**
+   * SUBMIT handler: Public code execution with win condition check.
+   * 
+   * Broadcasts results to all players and evaluates win conditions.
+   * Civilians win if all real test cases pass; imposter wins if
+   * all sabotage test cases pass (successful code corruption).
+   */
   socket.on('submit_code', async (data) => {
     try {
       const { language } = data;
@@ -180,14 +188,22 @@ function registerSubmitHandlers(socket, io) {
       console.log(`📊 Real cases: ${realResults.filter(r=>r.passed).length}/${realResults.length} passed`);
       console.log(`📊 Sabotage cases: ${sabotageResults.filter(r=>r.passed).length}/${sabotageResults.length} passed`);
 
-      // ── WIN CONDITION ──────────────────────────────────────────────────
-      // Civilians win: all real cases pass AND not all sabotage cases pass
-      //   → Code is correct, imposter failed to sabotage
-      // Imposter wins: all sabotage cases pass
-      //   → Imposter successfully corrupted the code
-      // No winner: real cases fail
-      //   → Keep coding
-      // ──────────────────────────────────────────────────────────────────
+      /**
+       * Win condition evaluation:
+       * 
+       * IMPOSTER VICTORY: All sabotage test cases pass
+       *   → Code corruption succeeded; imposter injected working exploits
+       * 
+       * CIVILIAN VICTORY: All real test cases pass AND sabotage cases fail
+       *   → Solution is correct and resilient to imposter's sabotage
+       * 
+       * NO WINNER: Real test cases fail
+       *   → Code still buggy; continue collaborative debugging
+       * 
+       * This creates the core social deduction tension: civilians must
+       * verify correctness while imposter subtly introduces bugs that
+       * still appear to work on surface-level tests.
+       */
 
       let winner = null;
       let winMessage = '';

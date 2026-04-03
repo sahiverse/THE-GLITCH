@@ -2,6 +2,25 @@ import React, { useRef, useEffect, useState } from 'react';
 import Editor from '@monaco-editor/react';
 import { useEditorSync } from '../src/hooks/useEditorSync';
 
+/**
+ * CollaborativeEditor Component
+ * 
+ * Monaco Editor integration for real-time collaborative code editing.
+ * 
+ * Key Features:
+ * - Real-time code synchronization with debounced updates
+ * - Remote cursor rendering with player name tags
+ * - Language selection (host-only)
+ * - Run/Submit code execution with visual feedback
+ * - Output panel with zoom controls
+ * - Read-only mode for voted-out players
+ * 
+ * Architecture:
+ * - Uses useEditorSync hook for WebSocket communication
+ * - Monaco Content Widgets for remote cursor visualization
+ * - pushEditOperations for conflict-free remote updates
+ */
+
 interface CursorPosition {
   cursorOffset: number;
   selection: {
@@ -73,13 +92,17 @@ const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({
   submittingPlayerColor = null,
   submitSummary = null
 }) => {
-  console.log('🔤 CollaborativeEditor - isHost:', isHost, 'onLanguageChange:', !!onLanguageChange, 'current language:', language);
-  
   const editorRef = useRef<any>(null);
   const monacoRef = useRef<any>(null);
+  
+  /** Flag to prevent emitting local changes when applying remote updates. */
   const isRemoteUpdate = useRef<boolean>(false);
+  
   const decorationsRef = useRef<string[]>([]);
+  
+  /** Map of player IDs to their Monaco Content Widget instances. */
   const cursorWidgetsRef = useRef<Map<string, any>>(new Map());
+  
   const [outputZoom, setOutputZoom] = useState(100);
   
   const { remoteCode, remoteCursors, isReadOnly, error, emitCodeUpdate, emitCursorUpdate } = useEditorSync({
@@ -89,15 +112,16 @@ const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({
     lockedPlayers
   });
   
-  // Log when language prop changes
+  /**
+   * Update Monaco editor language when prop changes.
+   * 
+   * Note: Changing the language does NOT remount the editor (key={roomCode}),
+   * it only updates the model language for syntax highlighting.
+   */
   useEffect(() => {
-    console.log('🔤 CollaborativeEditor language prop changed to:', language);
-    
-    // Update Monaco editor language if it's already mounted
     if (editorRef.current && monacoRef.current) {
       const model = editorRef.current.getModel();
       if (model) {
-        console.log('🔤 Updating Monaco editor language to:', language);
         monacoRef.current.editor.setModelLanguage(model, language);
       }
     }
@@ -126,7 +150,16 @@ const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({
     });
   };
   
-  // Apply remote code updates (CRITICAL - use executeEdits, not setValue)
+  /**
+   * Apply remote code updates using Monaco's executeEdits API.
+   * 
+   * Why executeEdits instead of setValue?
+   * - Preserves local cursor position and selection
+   * - Maintains undo history stack
+   * - Prevents editor flicker/reset on remote updates
+   * 
+   * @see https://microsoft.github.io/monaco-editor/api/interfaces/monaco.editor.ITextModel.html#pushEditOperations
+   */
   useEffect(() => {
     if (!remoteCode || !editorRef.current || !monacoRef.current) return;
 
@@ -162,7 +195,12 @@ const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({
     isRemoteUpdate.current = false;
   }, [remoteCode]);
   
-  // Handle cursor position changes
+  /**
+   * Track local cursor position changes and broadcast to other players.
+   * 
+   * Debouncing not applied here as cursor updates need to feel real-time;
+   * network layer handles batching via Socket.io's internal buffering.
+   */
   useEffect(() => {
     const editor = editorRef.current;
     if (!editor) return;
@@ -191,14 +229,23 @@ const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({
     };
   }, [emitCursorUpdate, isReadOnly]);
 
-  // Update read-only state
+  /** Update editor read-only state when player is voted out. */
   useEffect(() => {
     if (editorRef.current) {
       editorRef.current.updateOptions({ readOnly: isReadOnly });
     }
   }, [isReadOnly]);
 
-  // Render remote cursors as Monaco Content Widgets
+  /**
+   * Render remote player cursors using Monaco Content Widgets.
+   * 
+   * Each remote cursor consists of:
+   * 1. A blinking vertical bar (CSS animation)
+   * 2. A name tag floating above showing player name
+   * 
+   * Widgets are recreated on every cursor position update to ensure
+   * position accuracy. Cleanup handles players leaving mid-session.
+   */
   useEffect(() => {
     const editor = editorRef.current;
     const monaco = monacoRef.current;
@@ -297,7 +344,7 @@ const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({
     };
   }, [remoteCursors]);
 
-  // Add blink animation keyframes
+  /** Add CSS keyframe animation for remote cursor blinking. */
   useEffect(() => {
     const style = document.createElement('style');
     style.id = 'collab-blink-style';
@@ -316,7 +363,7 @@ const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({
     };
   }, []);
 
-  // Cleanup all widgets on unmount
+  /** Cleanup all widgets on unmount to prevent memory leaks. */
   useEffect(() => {
     return () => {
       const editor = editorRef.current;
@@ -354,10 +401,7 @@ const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({
             <span className="text-gray-400 text-xs font-mono">CHANGE:</span>
             <select 
               value={language}
-              onChange={(e) => {
-                console.log('🔤 Language selector changed to:', e.target.value);
-                onLanguageChange(e.target.value);
-              }}
+              onChange={(e) => onLanguageChange(e.target.value)}
               title="Change programming language"
               className="bg-[#1a1a1a] border-2 border-black px-2 py-1 text-xs font-mono focus:outline-none focus:border-[#55a039] hover:border-[#55a039] cursor-pointer text-cyan-400"
             >
@@ -380,7 +424,7 @@ const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({
       {/* Monaco Editor — 65% of remaining height */}
       <div className="flex-[65] min-h-0">
         <Editor
-          key={roomCode} // Don't force remount on language changes
+          key={roomCode} // Remount only when room changes, not on language change
           height="100%"
           language={language}
           theme="vs-dark"
@@ -389,7 +433,6 @@ const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({
           onMount={(editor, monaco) => {
             editorRef.current = editor;
             monacoRef.current = monaco;
-            console.log('🖥️ Monaco editor mounted with language:', language);
           }}
           options={{
             readOnly: isReadOnly,
@@ -575,7 +618,7 @@ const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({
         )}
       </div>
     </div>
-);
+  );
 };
 
 export default CollaborativeEditor;

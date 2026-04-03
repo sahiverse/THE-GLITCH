@@ -1,3 +1,15 @@
+/**
+ * ChatPanel Component
+ * 
+ * Real-time chat interface for game communication.
+ * Integrates with useChat hook for message management.
+ * 
+ * Features:
+ * - Auto-scroll to newest message
+ * - Message input with character limit
+ * - Visual distinction between own and other players' messages
+ * - Vote-out indicator (read-only mode for eliminated players)
+ */
 
 import React, { useState, useRef, useEffect } from 'react';
 import { useChat } from '../src/hooks/useChat';
@@ -25,7 +37,11 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ socket, roomCode, socketId
 
   const { messages, error, sendMessage } = useChat({ socket, roomCode, socketId, isVotedOut });
 
-  // Auto-scroll to bottom on new messages
+  /**
+   * Maintain scroll position at newest message.
+   * Using scrollIntoView with smooth behavior for better UX;
+   * ref is on a sentinel div at messages list bottom.
+   */
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
@@ -38,6 +54,10 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ socket, roomCode, socketId
     }
   };
 
+  /**
+   * Handle Enter key to submit (Shift+Enter for newline).
+   * Prevents default form submission on bare Enter.
+   */
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -49,6 +69,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ socket, roomCode, socketId
     return new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
+  /** Determine if message was sent by current player for styling. */
   const isOwnMessage = (message: MessageObject) => message.playerId === socketId;
 
   return (

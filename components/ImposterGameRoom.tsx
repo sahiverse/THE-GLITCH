@@ -5,6 +5,18 @@ import { ChatPanel } from './ChatPanel';
 import EmergencyMeeting from './EmergencyMeeting';
 import { GameState } from './types';
 
+/**
+ * ImposterGameRoom Component
+ * 
+ * Main gameplay interface for the imposter player.
+ * Displays the mission brief, collaborative code editor, sabotage test cases
+ * (visible only to imposter), team progress, and chat panel.
+ * 
+ * The imposter sees both their sabotage objectives and the team's visible
+ * progress, allowing them to strategically introduce bugs that pass
+ * surface-level tests but fail hidden edge cases.
+ */
+
 interface SabotageCase {
   id: number;
   description: string;
@@ -59,17 +71,20 @@ const ImposterGameRoom: React.FC<ImposterGameRoomProps> = ({
   pendingMeeting,
   onGameOver 
 }) => {
-  console.log('🔤 ImposterGameRoom rendered with language:', language, 'socketId:', socketId);
-  // Check if current player is host (first player in room or has isHost flag)
+  // Host determination: either explicitly flagged by server, or defaults to
+  // the first player in the room (fallback for backwards compatibility).
   const isHost = yourPlayer?.isHost || players[0]?.id === yourPlayer?.id;
-  console.log('🎮 ImposterGameRoom - yourPlayer:', yourPlayer, 'isHost:', isHost, 'players[0]:', players[0]);
   
-  // Meeting state
+  // Meeting state management
   const [meetingActive, setMeetingActive] = useState(!!pendingMeeting);
   const [meetingCallerName, setMeetingCallerName] = useState(pendingMeeting?.callerName || '');
   const [isForced, setIsForced] = useState(pendingMeeting?.isForced || false);
   
-  // Sync pendingMeeting prop into local state (useState initial value only works on mount)
+  /**
+   * Sync external meeting trigger into local component state.
+   * useState initializers only run on mount, so we need this effect
+   * to handle meetings triggered after component initialization.
+   */
   useEffect(() => {
     if (pendingMeeting) {
       setMeetingActive(true);
@@ -78,7 +93,7 @@ const ImposterGameRoom: React.FC<ImposterGameRoomProps> = ({
     }
   }, [pendingMeeting]);
   
-  // Run/Submit state
+  // Code execution state
   const [isRunning, setIsRunning] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [runResults, setRunResults] = useState<any[] | null>(null)
@@ -93,24 +108,21 @@ const ImposterGameRoom: React.FC<ImposterGameRoomProps> = ({
     totalCases: number;
   } | null>(null)
   
-  // meetingsLeft comes from App.tsx as a prop — always up to date
-  
-  // Computed game state for TopBar (no useState needed)
+  // Game state computation for TopBar display
   const aliveCount = players.length - (lockedPlayers?.length || 0);
   
-
-
   const gameStateForTopBar: GameState = {
     aliveCount: aliveCount,
-    totalPlayers: maxPlayers,     // use maxPlayers not players.length
-    maxPlayers: maxPlayers,       // add maxPlayers field
+    totalPlayers: maxPlayers,
+    maxPlayers: maxPlayers,
     timeLeft: timeLeft,
     topic: domain,
     round: currentRound,
     totalRounds: totalRounds,
-    meetingsLeft: meetingsLeft,   // from props
+    meetingsLeft: meetingsLeft,
   };
 
+  // Problem description zoom controls
   const [problemZoom, setProblemZoom] = useState(100);
 
   const handleZoomIn = () => {
@@ -121,12 +133,22 @@ const ImposterGameRoom: React.FC<ImposterGameRoomProps> = ({
     setProblemZoom(prev => Math.max(prev - 10, 80));
   };
 
-  // Meeting socket listeners
+  /**
+   * Subscribe to real-time game events via Socket.io.
+   * 
+   * Events handled:
+   * - meeting_started: Overlay emergency meeting UI
+   * - game_over: Transition to win/loss screen
+   * - run_started/run_result/run_status_update/run_error: Code execution feedback
+   * - submit_started/submit_result/submit_error: Submission handling
+   * 
+   * All listeners are cleaned up on unmount to prevent memory leaks
+   * and duplicate event handling.
+   */
   useEffect(() => {
     if (!socket) return
 
     const handleMeetingStarted = (data: any) => {
-      console.log('🚨 Meeting started received:', data.callerName, 'meetingsLeft:', data.meetingsLeft)
       setMeetingActive(true)
       setMeetingCallerName(data.callerName)
       setIsForced(data.isForced || false)
@@ -136,7 +158,7 @@ const ImposterGameRoom: React.FC<ImposterGameRoomProps> = ({
       onGameOver(data)
     }
 
-    // Run/Submit listeners
+    // Run/Submit event handlers
     const handleRunStarted = () => {
       setIsRunning(true)
       setRunResults(null)
@@ -208,18 +230,11 @@ const ImposterGameRoom: React.FC<ImposterGameRoomProps> = ({
   }, [socket, onGameOver])
 
   const handleLanguageChange = (language: string) => {
-    console.log('🔤 ImposterGameRoom handleLanguageChange called with:', language);
-    console.log('🔤 ImposterGameRoom socket exists:', !!socket);
-    console.log('🔤 ImposterGameRoom roomCode:', roomCode);
-    
-    // Broadcast language change to all players
-    const emitData = {
+    // Broadcast language change to all players in room
+    socket?.emit('language_change', {
       code: roomCode,
       language: language
-    };
-    console.log('🔤 ImposterGameRoom emitting language_change with data:', emitData);
-    
-    socket?.emit('language_change', emitData);
+    });
   };
 
   const handleRun = () => {
@@ -239,7 +254,6 @@ const ImposterGameRoom: React.FC<ImposterGameRoomProps> = ({
   }
 
   const onMeetingEnd = () => {
-    console.log('onMeetingEnd called in ImposterGameRoom')
     setMeetingActive(false)
   };
 

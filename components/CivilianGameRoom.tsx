@@ -5,6 +5,17 @@ import { ChatPanel } from './ChatPanel';
 import EmergencyMeeting from './EmergencyMeeting';
 import { GameState } from './types';
 
+/**
+ * CivilianGameRoom Component
+ * 
+ * Main gameplay interface for civilian players (non-imposters).
+ * Displays the problem description, collaborative code editor, test cases,
+ * and chat panel. Handles run/submit operations and emergency meetings.
+ * 
+ * Civilians see real test cases and aim to write correct code while
+ * identifying and fixing bugs introduced by the hidden imposter.
+ */
+
 interface CivilianGameRoomProps {
   category: 'SOURCE' | 'README';
   domain: string;
@@ -50,32 +61,20 @@ const CivilianGameRoom: React.FC<CivilianGameRoomProps> = ({
   pendingMeeting,
   onGameOver 
 }) => {
-  console.log('🔤 CivilianGameRoom rendered with language:', language, 'socketId:', socketId);
-  // Check if current player is host (first player in room or has isHost flag)
+  // Host determination: either explicitly flagged by server, or defaults to
+  // the first player in the room (fallback for backwards compatibility).
   const isHost = yourPlayer?.isHost || players[0]?.id === yourPlayer?.id;
-  console.log('🎮 CivilianGameRoom - yourPlayer:', yourPlayer, 'isHost:', isHost, 'players[0]:', players[0]);
   
-  // Calculate alive players from real data
-  const aliveCount = players.length - (roomData?.lockedPlayers?.length || 0);
-  
-
-
-  const gameStateForTopBar: GameState = {
-    aliveCount: aliveCount,
-    totalPlayers: maxPlayers,     // use maxPlayers (room creation count) not players.length
-    maxPlayers: maxPlayers,       // add maxPlayers field
-    timeLeft: timeLeft,           // from props — updates every second via timer_tick
-    topic: domain,
-    round: currentRound,          // from props
-    totalRounds: totalRounds,     // from props
-    meetingsLeft: meetingsLeft,   // from props
-  }
-
+  // Meeting state management
   const [meetingActive, setMeetingActive] = useState(!!pendingMeeting);
   const [meetingCallerName, setMeetingCallerName] = useState(pendingMeeting?.callerName || '');
   const [isForced, setIsForced] = useState(pendingMeeting?.isForced || false);
   
-  // Sync pendingMeeting prop into local state (useState initial value only works on mount)
+  /**
+   * Sync external meeting trigger into local component state.
+   * useState initializers only run on mount, so we need this effect
+   * to handle meetings triggered after component initialization.
+   */
   useEffect(() => {
     if (pendingMeeting) {
       setMeetingActive(true);
@@ -83,8 +82,8 @@ const CivilianGameRoom: React.FC<CivilianGameRoomProps> = ({
       setIsForced(pendingMeeting.isForced);
     }
   }, [pendingMeeting]);
-  
-  // Run/Submit state
+
+  // Code execution state
   const [isRunning, setIsRunning] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [runResults, setRunResults] = useState<any[] | null>(null)
@@ -97,9 +96,22 @@ const CivilianGameRoom: React.FC<CivilianGameRoomProps> = ({
     totalFailed: number;
     totalCases: number;
   } | null>(null)
+
+  // Game state computation for TopBar display
+  const aliveCount = players.length - (lockedPlayers?.length || 0);
   
-  // meetingsLeft comes from App.tsx as a prop — always up to date
-  
+  const gameStateForTopBar: GameState = {
+    aliveCount: aliveCount,
+    totalPlayers: maxPlayers,
+    maxPlayers: maxPlayers,
+    timeLeft: timeLeft,
+    topic: domain,
+    round: currentRound,
+    totalRounds: totalRounds,
+    meetingsLeft: meetingsLeft,
+  };
+
+  // Problem description zoom controls
   const [problemZoom, setProblemZoom] = useState(100);
 
   const handleZoomIn = () => {
@@ -110,12 +122,22 @@ const CivilianGameRoom: React.FC<CivilianGameRoomProps> = ({
     setProblemZoom(prev => Math.max(prev - 10, 80));
   };
 
-  // Meeting socket listeners
+  /**
+   * Subscribe to real-time game events via Socket.io.
+   * 
+   * Events handled:
+   * - meeting_started: Overlay emergency meeting UI
+   * - game_over: Transition to win/loss screen
+   * - run_started/run_result/run_error: Code execution feedback
+   * - submit_started/submit_result/submit_error: Submission handling
+   * 
+   * All listeners are cleaned up on unmount to prevent memory leaks
+   * and duplicate event handling.
+   */
   useEffect(() => {
     if (!socket) return
 
     const handleMeetingStarted = (data: any) => {
-      console.log('🚨 Meeting started received:', data.callerName, 'meetingsLeft:', data.meetingsLeft)
       setMeetingActive(true)
       setMeetingCallerName(data.callerName)
       setIsForced(data.isForced || false)
@@ -125,7 +147,7 @@ const CivilianGameRoom: React.FC<CivilianGameRoomProps> = ({
       onGameOver(data)
     }
 
-    // Run/Submit listeners
+    // Run/Submit event handlers
     const handleRunStarted = () => {
       setIsRunning(true)
       setRunResults(null)
@@ -196,18 +218,11 @@ const CivilianGameRoom: React.FC<CivilianGameRoomProps> = ({
   }, [socket, onGameOver])
 
   const handleLanguageChange = (language: string) => {
-    console.log('🔤 CivilianGameRoom handleLanguageChange called with:', language);
-    console.log('🔤 CivilianGameRoom socket exists:', !!socket);
-    console.log('🔤 CivilianGameRoom roomCode:', roomCode);
-    
-    // Broadcast language change to all players
-    const emitData = {
+    // Broadcast language change to all players in room
+    socket?.emit('language_change', {
       code: roomCode,
       language: language
-    };
-    console.log('🔤 CivilianGameRoom emitting language_change with data:', emitData);
-    
-    socket?.emit('language_change', emitData);
+    });
   };
 
   const handleRun = () => {
@@ -227,7 +242,6 @@ const CivilianGameRoom: React.FC<CivilianGameRoomProps> = ({
   }
 
   const onMeetingEnd = () => {
-    console.log('onMeetingEnd called in CivilianGameRoom')
     setMeetingActive(false)
   };
 

@@ -1,3 +1,15 @@
+/**
+ * THE GLITCH - Backend Server
+ * 
+ * Architecture: Express HTTP server + Socket.io WebSocket server
+ * State Management: Redis (room state, player data)
+ * Code Execution: Judge0 sandboxed environment
+ * 
+ * Security Notes:
+ * - CORS currently allows all origins (restrict to Vercel domain for production)
+ * - Socket.io configured with websocket+polling fallback for compatibility
+ */
+
 require('dotenv').config();
 const express = require('express');
 const http = require('http');
@@ -12,7 +24,7 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: "*",
+    origin: "*",  // SECURITY: Restrict to Vercel domain for production
     methods: ["GET", "POST"]
   },
   transports: ["websocket", "polling"]
@@ -20,19 +32,19 @@ const io = new Server(server, {
 
 const PORT = process.env.PORT || 3000;
 
-// Middleware
+/** Express middleware stack */
 app.use(cors());
 app.use(express.json());
 
-// Routes
+/** REST API routes for room lifecycle management */
 app.use('/room', roomRoutes);
 
-// Health check
+/** Kubernetes/Docker health probe endpoint */
 app.get('/health', (req, res) => {
   res.json({ status: 'OK', timestamp: new Date().toISOString() });
 });
 
-// Socket handlers
+/** Initialize all Socket.io event handlers */
 registerSocketHandlers(io);
 
 // Start server
